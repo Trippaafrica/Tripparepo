@@ -28,7 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { DeliveryType } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { FaTruck, FaMapMarkerAlt, FaBox, FaWeightHanging, FaRuler, FaStar, FaClock, FaShieldAlt } from 'react-icons/fa';
+import { FaTruck, FaMapMarkerAlt, FaBox, FaWeightHanging, FaRuler, FaStar, FaClock, FaShieldAlt, FaBicycle } from 'react-icons/fa';
 import LocationPicker from './LocationPicker';
 
 interface DeliveryFormProps {
@@ -90,8 +90,12 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
       newErrors.item_description = 'Item description is required';
     }
 
-    if (formData.weight !== undefined && formData.weight <= 0) {
-      newErrors.weight = 'Weight must be greater than 0';
+    if (formData.weight !== undefined) {
+      if (formData.weight <= 0) {
+        newErrors.weight = 'Weight must be greater than 0';
+      } else if (deliveryType === 'bike' && formData.weight > 20) {
+        newErrors.weight = 'Bike delivery is limited to items under 20kg';
+      }
     }
 
     if (formData.dimensions && !/^\d+x\d+x\d+\s*(cm|m|in|ft)$/i.test(formData.dimensions)) {
@@ -122,26 +126,45 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
         return;
       }
 
+      const requestData = {
+        user_id: user.id,
+        delivery_type: deliveryType,
+        pickup_location: formData.pickup_location.trim(),
+        dropoff_location: formData.dropoff_location.trim(),
+        item_description: formData.item_description.trim(),
+        weight: formData.weight || null,
+        dimensions: formData.dimensions?.trim() || null,
+        pickup_coordinates: formData.pickup_coordinates || null,
+        dropoff_coordinates: formData.dropoff_coordinates || null,
+        status: 'pending',
+      };
+
       const { data, error } = await supabase
         .from('delivery_requests')
-        .insert([
-          {
-            user_id: user.id,
-            delivery_type: deliveryType,
-            pickup_location: formData.pickup_location.trim(),
-            dropoff_location: formData.dropoff_location.trim(),
-            item_description: formData.item_description.trim(),
-            weight: formData.weight || null,
-            dimensions: formData.dimensions?.trim() || null,
-            pickup_coordinates: formData.pickup_coordinates,
-            dropoff_coordinates: formData.dropoff_coordinates,
-            status: 'pending',
-          },
-        ])
+        .insert([requestData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        let errorMessage = 'Failed to create delivery request';
+        
+        if (error.code === '23503') {
+          errorMessage = 'User authentication error. Please try logging in again.';
+        } else if (error.code === '23514') {
+          errorMessage = 'Invalid delivery type or status.';
+        } else if (error.code === '23502') {
+          errorMessage = 'Please fill in all required fields.';
+        }
+        
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+        });
+        return;
+      }
 
       toast({
         title: 'Delivery request created',
@@ -152,9 +175,10 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
 
       navigate(`/bidding/${data.id}`);
     } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create delivery request',
+        description: 'Failed to create delivery request. Please try again.',
         status: 'error',
         duration: 5000,
       });
@@ -220,7 +244,12 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
           <CardBody>
             <VStack spacing={6} align="stretch">
               <VStack spacing={2} align="center">
-                <Icon as={FaTruck} w={10} h={10} color="brand.secondary" />
+                <Icon 
+                  as={deliveryType === 'bike' ? FaBicycle : FaTruck} 
+                  w={10} 
+                  h={10} 
+                  color="brand.secondary" 
+                />
                 <Heading
                   size="lg"
                   color="brand.secondary"
@@ -228,6 +257,11 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
                 >
                   {deliveryType.charAt(0).toUpperCase() + deliveryType.slice(1)} Delivery Request
                 </Heading>
+                {deliveryType === 'bike' && (
+                  <Text color="gray.300" fontSize="sm" textAlign="center">
+                    Perfect for small packages under 20kg
+                  </Text>
+                )}
               </VStack>
 
               <form onSubmit={handleSubmit}>
