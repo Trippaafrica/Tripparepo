@@ -8,7 +8,6 @@ import {
   VStack,
   Container,
   useToast,
-  Textarea,
   NumberInput,
   NumberInputField,
   Select,
@@ -25,7 +24,6 @@ interface FormData {
   delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
   pickup_address: string;
   dropoff_address: string;
-  item_description: string;
   weight: number | null;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
   pickup_coordinates: { lat: number; lng: number } | null;
@@ -52,7 +50,6 @@ const CreateDeliveryRequest = () => {
     delivery_type: 'bike',
     pickup_address: '',
     dropoff_address: '',
-    item_description: '',
     weight: null,
     status: 'pending',
     pickup_coordinates: null,
@@ -266,16 +263,6 @@ const CreateDeliveryRequest = () => {
               value={formData.dropoff_address}
               onChange={handleChange}
               placeholder="Enter dropoff address"
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Item Description</FormLabel>
-            <Textarea
-              name="item_description"
-              value={formData.item_description}
-              onChange={handleChange}
-              placeholder="Describe the item(s) to be delivered"
             />
           </FormControl>
 

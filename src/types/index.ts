@@ -6,7 +6,6 @@ export interface DeliveryRequest {
   delivery_type: DeliveryType;
   pickup_address: string;
   dropoff_address: string;
-  item_description: string;
   weight?: number;
   created_at: string;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
