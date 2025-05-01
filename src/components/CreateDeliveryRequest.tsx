@@ -23,8 +23,8 @@ import { FaUser, FaPhone } from 'react-icons/fa';
 
 interface FormData {
   delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
-  pickup_location: string;
-  dropoff_location: string;
+  pickup_address: string;
+  dropoff_address: string;
   item_description: string;
   weight: number | null;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
@@ -50,8 +50,8 @@ const CreateDeliveryRequest = () => {
 
   const [formData, setFormData] = useState<FormData>({
     delivery_type: 'bike',
-    pickup_location: '',
-    dropoff_location: '',
+    pickup_address: '',
+    dropoff_address: '',
     item_description: '',
     weight: null,
     status: 'pending',
@@ -250,22 +250,22 @@ const CreateDeliveryRequest = () => {
           </SimpleGrid>
 
           <FormControl isRequired>
-            <FormLabel>Pickup Location</FormLabel>
+            <FormLabel>Pickup Address</FormLabel>
             <Input
-              name="pickup_location"
-              value={formData.pickup_location}
+              name="pickup_address"
+              value={formData.pickup_address}
               onChange={handleChange}
-              placeholder="Enter pickup location"
+              placeholder="Enter pickup address"
             />
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>Dropoff Location</FormLabel>
+            <FormLabel>Dropoff Address</FormLabel>
             <Input
-              name="dropoff_location"
-              value={formData.dropoff_location}
+              name="dropoff_address"
+              value={formData.dropoff_address}
               onChange={handleChange}
-              placeholder="Enter dropoff location"
+              placeholder="Enter dropoff address"
             />
           </FormControl>
 

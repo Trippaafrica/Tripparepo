@@ -4,8 +4,8 @@ export interface DeliveryRequest {
   id: string;
   user_id: string;
   delivery_type: DeliveryType;
-  pickup_location: string;
-  dropoff_location: string;
+  pickup_address: string;
+  dropoff_address: string;
   item_description: string;
   weight?: number;
   created_at: string;
