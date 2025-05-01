@@ -44,34 +44,69 @@ export function SignUpForm() {
       borderWidth={1}
       borderRadius={8}
       boxShadow="lg"
-      bg={useColorModeValue('white', 'gray.700')}
+      bg="rgba(26, 26, 46, 0.8)"
+      backdropFilter="blur(10px)"
+      border="1px solid rgba(157, 78, 221, 0.2)"
     >
       <form onSubmit={handleSubmit}>
         <VStack spacing={4}>
           <FormControl id="email" isRequired isInvalid={!!error}>
-            <FormLabel>Email address</FormLabel>
+            <FormLabel color="gray.200">Email address</FormLabel>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              color="white"
+              _placeholder={{ color: 'gray.400' }}
+              bg="rgba(26, 26, 46, 0.6)"
+              borderColor="rgba(157, 78, 221, 0.2)"
+              _hover={{
+                borderColor: 'brand.primary',
+              }}
+              _focus={{
+                borderColor: 'brand.secondary',
+                boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+              }}
             />
           </FormControl>
 
           <FormControl id="password" isRequired isInvalid={!!error}>
-            <FormLabel>Password</FormLabel>
+            <FormLabel color="gray.200">Password</FormLabel>
             <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              color="white"
+              _placeholder={{ color: 'gray.400' }}
+              bg="rgba(26, 26, 46, 0.6)"
+              borderColor="rgba(157, 78, 221, 0.2)"
+              _hover={{
+                borderColor: 'brand.primary',
+              }}
+              _focus={{
+                borderColor: 'brand.secondary',
+                boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+              }}
             />
           </FormControl>
 
           <FormControl id="confirm-password" isRequired isInvalid={!!error}>
-            <FormLabel>Confirm Password</FormLabel>
+            <FormLabel color="gray.200">Confirm Password</FormLabel>
             <Input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              color="white"
+              _placeholder={{ color: 'gray.400' }}
+              bg="rgba(26, 26, 46, 0.6)"
+              borderColor="rgba(157, 78, 221, 0.2)"
+              _hover={{
+                borderColor: 'brand.primary',
+              }}
+              _focus={{
+                borderColor: 'brand.secondary',
+                boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+              }}
             />
             <FormErrorMessage>{error}</FormErrorMessage>
           </FormControl>
