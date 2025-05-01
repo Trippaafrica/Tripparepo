@@ -156,14 +156,66 @@ const Home = () => {
               display="flex"
               alignItems="center"
               justifyContent="center"
+              p={8}
             >
+              <Box
+                position="relative"
+                width="100%"
+                height="100%"
+                style={{
+                  background: `url('data:image/svg+xml,${encodeURIComponent(`<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <clipPath id="cityscape">
+                        <ellipse cx="400" cy="300" rx="380" ry="280"/>
+                      </clipPath>
+                    </defs>
+                    <g clip-path="url(#cityscape)">
+                      <rect width="800" height="600" fill="#8B5CF6"/>
+                      <!-- Buildings -->
+                      <g fill="white" opacity="0.9">
+                        <rect x="50" y="200" width="80" height="400"/>
+                        <rect x="150" y="150" width="80" height="450"/>
+                        <rect x="250" y="250" width="80" height="350"/>
+                        <rect x="350" y="100" width="80" height="500"/>
+                        <rect x="450" y="200" width="80" height="400"/>
+                        <rect x="550" y="150" width="80" height="450"/>
+                        <rect x="650" y="250" width="80" height="350"/>
+                      </g>
+                      <!-- Clouds -->
+                      <g fill="white" opacity="0.8">
+                        <circle cx="100" cy="100" r="30"/>
+                        <circle cx="130" cy="100" r="25"/>
+                        <circle cx="160" cy="100" r="20"/>
+                        
+                        <circle cx="400" cy="80" r="25"/>
+                        <circle cx="430" cy="80" r="20"/>
+                        
+                        <circle cx="600" cy="120" r="30"/>
+                        <circle cx="630" cy="120" r="25"/>
+                        <circle cx="660" cy="120" r="20"/>
+                      </g>
+                      <!-- Location Pin -->
+                      <g transform="translate(380,80)">
+                        <path d="M20,0 C8.954305,0 0,8.954305 0,20 C0,31.045695 20,50 20,50 C20,50 40,31.045695 40,20 C40,8.954305 31.045695,0 20,0 Z" fill="#EF4444"/>
+                        <circle cx="20" cy="20" r="8" fill="white"/>
+                      </g>
+                    </g>
+                  </svg>`)}')`,
+                  backgroundSize: 'contain',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              />
               <Image
-                src="/images/delivery-cyclist.png"
+                src="/images/cyclist.svg"
                 alt="Delivery Cyclist"
+                position="absolute"
                 objectFit="contain"
-                height="90%"
-                width="90%"
-                filter="drop-shadow(0 0 20px rgba(57, 255, 20, 0.2))"
+                height="70%"
+                width="70%"
+                style={{
+                  filter: 'drop-shadow(0 0 20px rgba(57, 255, 20, 0.2))'
+                }}
               />
             </Box>
           </SimpleGrid>
