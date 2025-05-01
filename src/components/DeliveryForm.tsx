@@ -28,7 +28,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { DeliveryType } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { FaTruck, FaMapMarkerAlt, FaBox, FaWeightHanging, FaRuler, FaStar, FaClock, FaShieldAlt, FaBicycle } from 'react-icons/fa';
+import { FaTruck, FaMapMarkerAlt, FaBox, FaWeightHanging, FaRuler, FaStar, FaClock, FaShieldAlt, FaBicycle, FaUser, FaPhone } from 'react-icons/fa';
 import LocationPicker from './LocationPicker';
 
 interface DeliveryFormProps {
@@ -41,6 +41,10 @@ interface FormData {
   item_description: string;
   weight?: number;
   dimensions?: string;
+  sender_name: string;
+  sender_phone: string;
+  receiver_name: string;
+  receiver_phone: string;
   pickup_coordinates?: {
     lat: number;
     lng: number;
@@ -57,6 +61,10 @@ interface FormErrors {
   item_description?: string;
   weight?: string;
   dimensions?: string;
+  sender_name?: string;
+  sender_phone?: string;
+  receiver_name?: string;
+  receiver_phone?: string;
 }
 
 const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
@@ -71,6 +79,10 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
     item_description: '',
     weight: undefined,
     dimensions: '',
+    sender_name: '',
+    sender_phone: '',
+    receiver_name: '',
+    receiver_phone: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -88,6 +100,26 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
 
     if (!formData.item_description.trim()) {
       newErrors.item_description = 'Item description is required';
+    }
+
+    if (!formData.sender_name.trim()) {
+      newErrors.sender_name = 'Sender name is required';
+    }
+
+    if (!formData.sender_phone.trim()) {
+      newErrors.sender_phone = 'Sender phone is required';
+    } else if (!/^\+?[1-9]\d{9,14}$/.test(formData.sender_phone.trim())) {
+      newErrors.sender_phone = 'Please enter a valid phone number';
+    }
+
+    if (!formData.receiver_name.trim()) {
+      newErrors.receiver_name = 'Receiver name is required';
+    }
+
+    if (!formData.receiver_phone.trim()) {
+      newErrors.receiver_phone = 'Receiver phone is required';
+    } else if (!/^\+?[1-9]\d{9,14}$/.test(formData.receiver_phone.trim())) {
+      newErrors.receiver_phone = 'Please enter a valid phone number';
     }
 
     if (formData.weight !== undefined) {
@@ -134,6 +166,10 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
         item_description: formData.item_description.trim(),
         weight: formData.weight || null,
         dimensions: formData.dimensions?.trim() || null,
+        sender_name: formData.sender_name.trim(),
+        sender_phone: formData.sender_phone.trim(),
+        receiver_name: formData.receiver_name.trim(),
+        receiver_phone: formData.receiver_phone.trim(),
         pickup_coordinates: formData.pickup_coordinates || null,
         dropoff_coordinates: formData.dropoff_coordinates || null,
         status: 'pending',
@@ -266,6 +302,110 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
 
               <form onSubmit={handleSubmit}>
                 <VStack spacing={6}>
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
+                    <FormControl isRequired isInvalid={!!errors.sender_name}>
+                      <FormLabel color="gray.200">
+                        <Icon as={FaUser} mr={2} />
+                        Sender Name
+                      </FormLabel>
+                      <Input
+                        name="sender_name"
+                        value={formData.sender_name}
+                        onChange={handleChange}
+                        placeholder="Enter sender's name"
+                        color="white"
+                        _placeholder={{ color: 'gray.400' }}
+                        bg="rgba(26, 26, 46, 0.6)"
+                        borderColor="rgba(157, 78, 221, 0.2)"
+                        _hover={{
+                          borderColor: 'brand.primary',
+                        }}
+                        _focus={{
+                          borderColor: 'brand.secondary',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                        }}
+                      />
+                      <FormErrorMessage>{errors.sender_name}</FormErrorMessage>
+                    </FormControl>
+
+                    <FormControl isRequired isInvalid={!!errors.sender_phone}>
+                      <FormLabel color="gray.200">
+                        <Icon as={FaPhone} mr={2} />
+                        Sender Phone
+                      </FormLabel>
+                      <Input
+                        name="sender_phone"
+                        value={formData.sender_phone}
+                        onChange={handleChange}
+                        placeholder="Enter sender's phone number"
+                        color="white"
+                        _placeholder={{ color: 'gray.400' }}
+                        bg="rgba(26, 26, 46, 0.6)"
+                        borderColor="rgba(157, 78, 221, 0.2)"
+                        _hover={{
+                          borderColor: 'brand.primary',
+                        }}
+                        _focus={{
+                          borderColor: 'brand.secondary',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                        }}
+                      />
+                      <FormErrorMessage>{errors.sender_phone}</FormErrorMessage>
+                    </FormControl>
+                  </SimpleGrid>
+
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
+                    <FormControl isRequired isInvalid={!!errors.receiver_name}>
+                      <FormLabel color="gray.200">
+                        <Icon as={FaUser} mr={2} />
+                        Receiver Name
+                      </FormLabel>
+                      <Input
+                        name="receiver_name"
+                        value={formData.receiver_name}
+                        onChange={handleChange}
+                        placeholder="Enter receiver's name"
+                        color="white"
+                        _placeholder={{ color: 'gray.400' }}
+                        bg="rgba(26, 26, 46, 0.6)"
+                        borderColor="rgba(157, 78, 221, 0.2)"
+                        _hover={{
+                          borderColor: 'brand.primary',
+                        }}
+                        _focus={{
+                          borderColor: 'brand.secondary',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                        }}
+                      />
+                      <FormErrorMessage>{errors.receiver_name}</FormErrorMessage>
+                    </FormControl>
+
+                    <FormControl isRequired isInvalid={!!errors.receiver_phone}>
+                      <FormLabel color="gray.200">
+                        <Icon as={FaPhone} mr={2} />
+                        Receiver Phone
+                      </FormLabel>
+                      <Input
+                        name="receiver_phone"
+                        value={formData.receiver_phone}
+                        onChange={handleChange}
+                        placeholder="Enter receiver's phone number"
+                        color="white"
+                        _placeholder={{ color: 'gray.400' }}
+                        bg="rgba(26, 26, 46, 0.6)"
+                        borderColor="rgba(157, 78, 221, 0.2)"
+                        _hover={{
+                          borderColor: 'brand.primary',
+                        }}
+                        _focus={{
+                          borderColor: 'brand.secondary',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                        }}
+                      />
+                      <FormErrorMessage>{errors.receiver_phone}</FormErrorMessage>
+                    </FormControl>
+                  </SimpleGrid>
+
                   <FormControl isRequired isInvalid={!!errors.pickup_location}>
                     <FormLabel color="gray.200">
                       <Icon as={FaMapMarkerAlt} mr={2} />
