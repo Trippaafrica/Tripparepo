@@ -1,58 +1,113 @@
 import { useState, useEffect } from 'react';
 import {
   Box,
+  Container,
   VStack,
   Heading,
   Text,
   Button,
   Card,
   CardBody,
-  Stack,
-  StackDivider,
+  HStack,
+  Input,
   useToast,
-  Spinner,
+  Icon,
+  ScaleFade,
 } from '@chakra-ui/react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { Bid, DeliveryRequest } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { FaTruck, FaMoneyBillWave, FaClock } from 'react-icons/fa';
+
+interface Bid {
+  id: string;
+  amount: number;
+  delivery_time: string;
+  created_at: string;
+  user_id: string;
+}
 
 const BiddingPage = () => {
   const { requestId } = useParams<{ requestId: string }>();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const toast = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [deliveryRequest, setDeliveryRequest] = useState<DeliveryRequest | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
+  const [amount, setAmount] = useState('');
+  const [deliveryTime, setDeliveryTime] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    fetchDeliveryRequestAndBids();
+    fetchBids();
+    const subscription = supabase
+      .channel('bids')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bids' }, () => {
+        fetchBids();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [requestId]);
 
-  const fetchDeliveryRequestAndBids = async () => {
+  const fetchBids = async () => {
+    const { data, error } = await supabase
+      .from('bids')
+      .select('*')
+      .eq('request_id', requestId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch bids',
+        status: 'error',
+        duration: 5000,
+      });
+      return;
+    }
+
+    setBids(data || []);
+  };
+
+  const handleSubmitBid = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
-      // Fetch delivery request
-      const { data: request, error: requestError } = await supabase
-        .from('delivery_requests')
-        .select('*')
-        .eq('id', requestId)
-        .single();
+      if (!user) {
+        toast({
+          title: 'Authentication required',
+          description: 'Please sign in to place a bid',
+          status: 'error',
+          duration: 5000,
+        });
+        return;
+      }
 
-      if (requestError) throw requestError;
-      setDeliveryRequest(request);
+      const { error } = await supabase.from('bids').insert([
+        {
+          request_id: requestId,
+          user_id: user.id,
+          amount: parseFloat(amount),
+          delivery_time: deliveryTime,
+        },
+      ]);
 
-      // Fetch bids
-      const { data: bidsData, error: bidsError } = await supabase
-        .from('bids')
-        .select('*')
-        .eq('delivery_request_id', requestId)
-        .order('amount', { ascending: true });
+      if (error) throw error;
 
-      if (bidsError) throw bidsError;
-      setBids(bidsData);
+      toast({
+        title: 'Bid placed successfully',
+        status: 'success',
+        duration: 3000,
+      });
+
+      setAmount('');
+      setDeliveryTime('');
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to fetch delivery request and bids',
+        description: 'Failed to place bid',
         status: 'error',
         duration: 5000,
       });
@@ -61,93 +116,89 @@ const BiddingPage = () => {
     }
   };
 
-  const handleAcceptBid = async (bidId: string) => {
-    try {
-      const { error } = await supabase
-        .from('bids')
-        .update({ status: 'accepted' })
-        .eq('id', bidId);
-
-      if (error) throw error;
-
-      // Update delivery request status
-      await supabase
-        .from('delivery_requests')
-        .update({ status: 'accepted' })
-        .eq('id', requestId);
-
-      toast({
-        title: 'Bid accepted',
-        description: 'Redirecting to payment...',
-        status: 'success',
-        duration: 3000,
-      });
-
-      // Here you would typically redirect to a payment page
-      // navigate(`/payment/${bidId}`);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to accept bid',
-        status: 'error',
-        duration: 5000,
-      });
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <Box p={8} display="flex" justifyContent="center" alignItems="center" minH="50vh">
-        <Spinner size="xl" />
-      </Box>
-    );
-  }
-
-  if (!deliveryRequest) {
-    return (
-      <Box p={8}>
-        <Text>Delivery request not found</Text>
-      </Box>
-    );
-  }
-
   return (
-    <Box p={8} maxW="800px" mx="auto">
-      <VStack spacing={8}>
-        <Heading>Available Bids</Heading>
-        <Text>Select a bid for your delivery request</Text>
+    <Container maxW="container.md" py={8}>
+      <ScaleFade initialScale={0.9} in={true}>
+        <VStack spacing={8}>
+          <VStack spacing={2}>
+            <Icon as={FaTruck} w={10} h={10} color="brand.secondary" />
+            <Heading
+              size="lg"
+              bgGradient="linear(to-r, brand.secondary, brand.primary)"
+              bgClip="text"
+            >
+              Delivery Bids
+            </Heading>
+          </VStack>
 
-        <Stack spacing={4} width="full">
-          {bids.map((bid) => (
-            <Card key={bid.id} variant="outline">
-              <CardBody>
-                <Stack divider={<StackDivider />} spacing={4}>
-                  <Box>
-                    <Text fontSize="lg" fontWeight="bold">
-                      ${bid.amount}
-                    </Text>
-                    <Text color="gray.600">Estimated time: {bid.estimated_time}</Text>
-                  </Box>
+          <Card width="100%">
+            <CardBody>
+              <form onSubmit={handleSubmitBid}>
+                <VStack spacing={4}>
+                  <HStack width="100%" spacing={4}>
+                    <Box flex={1}>
+                      <Text mb={2} display="flex" alignItems="center" gap={2}>
+                        <Icon as={FaMoneyBillWave} color="brand.secondary" />
+                        Bid Amount
+                      </Text>
+                      <Input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="Enter amount"
+                        required
+                      />
+                    </Box>
+                    <Box flex={1}>
+                      <Text mb={2} display="flex" alignItems="center" gap={2}>
+                        <Icon as={FaClock} color="brand.secondary" />
+                        Delivery Time
+                      </Text>
+                      <Input
+                        type="datetime-local"
+                        value={deliveryTime}
+                        onChange={(e) => setDeliveryTime(e.target.value)}
+                        required
+                      />
+                    </Box>
+                  </HStack>
                   <Button
-                    colorScheme="blue"
-                    onClick={() => handleAcceptBid(bid.id)}
-                    isDisabled={bid.status !== 'pending'}
+                    type="submit"
+                    colorScheme="brand"
+                    width="full"
+                    isLoading={isLoading}
+                    leftIcon={<Icon as={FaTruck} />}
                   >
-                    {bid.status === 'pending' ? 'Accept Bid' : 'Bid Accepted'}
+                    Place Bid
                   </Button>
-                </Stack>
-              </CardBody>
-            </Card>
-          ))}
+                </VStack>
+              </form>
+            </CardBody>
+          </Card>
 
-          {bids.length === 0 && (
-            <Text textAlign="center" color="gray.600">
-              No bids available yet. Please check back later.
-            </Text>
-          )}
-        </Stack>
-      </VStack>
-    </Box>
+          <VStack spacing={4} width="100%" align="stretch">
+            <Heading size="md">Current Bids</Heading>
+            {bids.map((bid) => (
+              <Card key={bid.id}>
+                <CardBody>
+                  <HStack justify="space-between">
+                    <VStack align="start" spacing={1}>
+                      <Text fontWeight="bold">${bid.amount}</Text>
+                      <Text fontSize="sm" color="gray.400">
+                        Delivery by: {new Date(bid.delivery_time).toLocaleString()}
+                      </Text>
+                    </VStack>
+                    <Text fontSize="sm" color="gray.400">
+                      {new Date(bid.created_at).toLocaleString()}
+                    </Text>
+                  </HStack>
+                </CardBody>
+              </Card>
+            ))}
+          </VStack>
+        </VStack>
+      </ScaleFade>
+    </Container>
   );
 };
 
