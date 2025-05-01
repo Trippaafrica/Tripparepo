@@ -136,9 +136,11 @@ const Home = () => {
             <Box
               position="relative"
               height="400px"
+              width="100%"
               borderRadius="xl"
               overflow="hidden"
               boxShadow="0 8px 32px rgba(57, 255, 20, 0.2)"
+              bg="rgba(138, 43, 226, 0.2)"
             >
               <DeliveryAnimation />
             </Box>
