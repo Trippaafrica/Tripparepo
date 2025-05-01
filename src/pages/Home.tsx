@@ -3,7 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { FaMotorcycle, FaTruck, FaTruckMoving, FaGasPump, FaStar, FaClock, FaShieldAlt, FaUsers, FaMapMarkedAlt, FaMoneyBillWave, FaRoute } from 'react-icons/fa';
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { DeliveryAnimation } from '../components/DeliveryAnimation';
+import { PackageScene } from '../components/PackageScene';
 
 const deliveryTypes = [
   {
@@ -142,7 +142,7 @@ const Home = () => {
               boxShadow="0 8px 32px rgba(57, 255, 20, 0.2)"
               bg="rgba(138, 43, 226, 0.2)"
             >
-              <DeliveryAnimation />
+              <PackageScene />
             </Box>
           </SimpleGrid>
         </Container>
