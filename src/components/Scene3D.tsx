@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { WelcomeCharacter } from './WelcomeCharacter';
 
 export function Scene3D() {
@@ -22,7 +22,6 @@ export function Scene3D() {
         minPolarAngle={Math.PI / 2}
         maxPolarAngle={Math.PI / 2}
       />
-      <Environment preset="city" />
     </Canvas>
   );
 } 
