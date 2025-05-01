@@ -152,17 +152,18 @@ const Home = () => {
               borderRadius="xl"
               overflow="hidden"
               boxShadow="0 8px 32px rgba(57, 255, 20, 0.2)"
-              bgGradient="radial(circle at center, brand.primary, brand.dark)"
+              bgGradient="radial(circle at 50% 50%, rgba(157, 78, 221, 0.3), rgba(26, 26, 46, 0.9))"
               display="flex"
               alignItems="center"
               justifyContent="center"
             >
-              <Icon
-                as={FaMotorcycle}
-                w={32}
-                h={32}
-                color="brand.secondary"
-                filter="drop-shadow(0 0 20px rgba(57, 255, 20, 0.4))"
+              <Image
+                src="/images/delivery-cyclist.png"
+                alt="Delivery Cyclist"
+                objectFit="contain"
+                height="90%"
+                width="90%"
+                filter="drop-shadow(0 0 20px rgba(57, 255, 20, 0.2))"
               />
             </Box>
           </SimpleGrid>
