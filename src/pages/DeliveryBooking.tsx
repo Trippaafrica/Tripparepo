@@ -6,7 +6,7 @@ import { DeliveryType } from '../types';
 const DeliveryBooking = () => {
   const { type } = useParams<{ type: DeliveryType }>();
 
-  if (!type || !['standard', 'express', 'scheduled'].includes(type)) {
+  if (!type || !['bike', 'truck', 'van', 'fuel'].includes(type)) {
     return (
       <Box p={8} textAlign="center">
         <VStack spacing={4}>

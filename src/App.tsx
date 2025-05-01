@@ -1,10 +1,13 @@
-import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { ChakraProvider, extendTheme, Box } from '@chakra-ui/react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import DeliveryBooking from './pages/DeliveryBooking';
 import BiddingPage from './pages/BiddingPage';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 
 const theme = extendTheme({
   config: {
@@ -112,11 +115,18 @@ function App() {
       <ChakraProvider theme={theme}>
         <AuthProvider>
           <Router>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/delivery/:type" element={<DeliveryBooking />} />
-              <Route path="/bidding/:requestId" element={<BiddingPage />} />
-            </Routes>
+            <Box minH="100vh">
+              <Navbar />
+              <Box pt="16">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/delivery/:type" element={<DeliveryBooking />} />
+                  <Route path="/bidding/:requestId" element={<BiddingPage />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                </Routes>
+              </Box>
+            </Box>
           </Router>
         </AuthProvider>
       </ChakraProvider>
