@@ -13,18 +13,36 @@ import {
   useToast,
   Icon,
   ScaleFade,
+  Spinner,
+  Badge,
+  Divider,
+  Stack,
+  Avatar,
 } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { FaTruck, FaMoneyBillWave, FaClock } from 'react-icons/fa';
+import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
+
+interface DeliveryRequest {
+  id: string;
+  delivery_type: string;
+  pickup_location: string;
+  dropoff_location: string;
+  item_description: string;
+  weight?: number;
+  dimensions?: string;
+  status: string;
+}
 
 interface Bid {
   id: string;
   amount: number;
-  delivery_time: string;
+  estimated_time: string;
   created_at: string;
-  user_id: string;
+  rider_id: string;
+  rider_name?: string;
+  rider_avatar?: string;
 }
 
 const BiddingPage = () => {
@@ -32,17 +50,27 @@ const BiddingPage = () => {
   const { user } = useAuth();
   const toast = useToast();
   const [bids, setBids] = useState<Bid[]>([]);
-  const [amount, setAmount] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [request, setRequest] = useState<DeliveryRequest | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    fetchDeliveryRequest();
     fetchBids();
+
+    // Subscribe to new bids
     const subscription = supabase
       .channel('bids')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'bids' }, () => {
-        fetchBids();
-      })
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'bids',
+          filter: `request_id=eq.${requestId}`
+        }, 
+        () => {
+          fetchBids();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -50,64 +78,53 @@ const BiddingPage = () => {
     };
   }, [requestId]);
 
-  const fetchBids = async () => {
-    const { data, error } = await supabase
-      .from('bids')
-      .select('*')
-      .eq('request_id', requestId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch bids',
-        status: 'error',
-        duration: 5000,
-      });
-      return;
-    }
-
-    setBids(data || []);
-  };
-
-  const handleSubmitBid = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const fetchDeliveryRequest = async () => {
     try {
-      if (!user) {
-        toast({
-          title: 'Authentication required',
-          description: 'Please sign in to place a bid',
-          status: 'error',
-          duration: 5000,
-        });
-        return;
-      }
-
-      const { error } = await supabase.from('bids').insert([
-        {
-          request_id: requestId,
-          user_id: user.id,
-          amount: parseFloat(amount),
-          delivery_time: deliveryTime,
-        },
-      ]);
+      const { data, error } = await supabase
+        .from('delivery_requests')
+        .select('*')
+        .eq('id', requestId)
+        .single();
 
       if (error) throw error;
-
-      toast({
-        title: 'Bid placed successfully',
-        status: 'success',
-        duration: 3000,
-      });
-
-      setAmount('');
-      setDeliveryTime('');
+      setRequest(data);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to place bid',
+        description: 'Failed to fetch delivery request details',
+        status: 'error',
+        duration: 5000,
+      });
+    }
+  };
+
+  const fetchBids = async () => {
+    try {
+      const { data: bidsData, error: bidsError } = await supabase
+        .from('bids')
+        .select(`
+          *,
+          riders:rider_id (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('delivery_request_id', requestId)
+        .order('created_at', { ascending: false });
+
+      if (bidsError) throw bidsError;
+
+      const formattedBids = bidsData.map(bid => ({
+        ...bid,
+        rider_name: bid.riders?.full_name,
+        rider_avatar: bid.riders?.avatar_url,
+      }));
+
+      setBids(formattedBids);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch bids',
         status: 'error',
         duration: 5000,
       });
@@ -116,86 +133,134 @@ const BiddingPage = () => {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <Container maxW="container.md" py={8}>
+        <VStack spacing={4}>
+          <Spinner size="xl" color="brand.secondary" />
+          <Text>Loading delivery request...</Text>
+        </VStack>
+      </Container>
+    );
+  }
+
   return (
     <Container maxW="container.md" py={8}>
       <ScaleFade initialScale={0.9} in={true}>
         <VStack spacing={8}>
-          <VStack spacing={2}>
-            <Icon as={FaTruck} w={10} h={10} color="brand.secondary" />
-            <Heading
-              size="lg"
-              bgGradient="linear(to-r, brand.secondary, brand.primary)"
-              bgClip="text"
-            >
-              Delivery Bids
-            </Heading>
-          </VStack>
-
-          <Card width="100%">
+          <Card width="100%" bg="rgba(26, 26, 46, 0.8)" backdropFilter="blur(10px)" border="1px solid rgba(157, 78, 221, 0.2)">
             <CardBody>
-              <form onSubmit={handleSubmitBid}>
-                <VStack spacing={4}>
-                  <HStack width="100%" spacing={4}>
-                    <Box flex={1}>
-                      <Text mb={2} display="flex" alignItems="center" gap={2}>
-                        <Icon as={FaMoneyBillWave} color="brand.secondary" />
-                        Bid Amount
+              <VStack spacing={4} align="stretch">
+                <HStack spacing={4} justify="center">
+                  <Icon as={FaBicycle} w={8} h={8} color="brand.secondary" />
+                  <Heading size="lg" color="brand.secondary">
+                    Delivery Request Details
+                  </Heading>
+                </HStack>
+
+                {request && (
+                  <>
+                    <Divider />
+                    <Stack spacing={4} direction={{ base: 'column', md: 'row' }}>
+                      <Box flex={1}>
+                        <HStack>
+                          <Icon as={FaMapMarkerAlt} color="green.400" />
+                          <Text color="gray.200" fontWeight="bold">Pickup:</Text>
+                        </HStack>
+                        <Text color="white" ml={6}>{request.pickup_location}</Text>
+                      </Box>
+                      <Box flex={1}>
+                        <HStack>
+                          <Icon as={FaMapMarkerAlt} color="red.400" />
+                          <Text color="gray.200" fontWeight="bold">Dropoff:</Text>
+                        </HStack>
+                        <Text color="white" ml={6}>{request.dropoff_location}</Text>
+                      </Box>
+                    </Stack>
+                    <Text color="gray.200">
+                      <strong>Item:</strong> {request.item_description}
+                    </Text>
+                    {request.weight && (
+                      <Text color="gray.200">
+                        <strong>Weight:</strong> {request.weight}kg
                       </Text>
-                      <Input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Enter amount in ₦"
-                        required
-                      />
-                    </Box>
-                    <Box flex={1}>
-                      <Text mb={2} display="flex" alignItems="center" gap={2}>
-                        <Icon as={FaClock} color="brand.secondary" />
-                        Delivery Time
+                    )}
+                    {request.dimensions && (
+                      <Text color="gray.200">
+                        <strong>Dimensions:</strong> {request.dimensions}
                       </Text>
-                      <Input
-                        type="datetime-local"
-                        value={deliveryTime}
-                        onChange={(e) => setDeliveryTime(e.target.value)}
-                        required
-                      />
-                    </Box>
-                  </HStack>
-                  <Button
-                    type="submit"
-                    colorScheme="brand"
-                    width="full"
-                    isLoading={isLoading}
-                    leftIcon={<Icon as={FaTruck} />}
-                  >
-                    Place Bid
-                  </Button>
-                </VStack>
-              </form>
+                    )}
+                  </>
+                )}
+              </VStack>
             </CardBody>
           </Card>
 
-          <VStack spacing={4} width="100%" align="stretch">
-            <Heading size="md">Current Bids</Heading>
-            {bids.map((bid) => (
-              <Card key={bid.id}>
-                <CardBody>
-                  <HStack justify="space-between">
-                    <VStack align="start" spacing={1}>
-                      <Text fontWeight="bold">₦{bid.amount}</Text>
-                      <Text fontSize="sm" color="gray.400">
-                        Delivery by: {new Date(bid.delivery_time).toLocaleString()}
-                      </Text>
-                    </VStack>
-                    <Text fontSize="sm" color="gray.400">
-                      {new Date(bid.created_at).toLocaleString()}
+          <Card width="100%" bg="rgba(26, 26, 46, 0.8)" backdropFilter="blur(10px)" border="1px solid rgba(157, 78, 221, 0.2)">
+            <CardBody>
+              <VStack spacing={4} align="stretch">
+                <HStack spacing={4} justify="space-between">
+                  <Heading size="md" color="brand.secondary">Rider Bids</Heading>
+                  <Badge colorScheme={bids.length > 0 ? "green" : "yellow"}>
+                    {bids.length} {bids.length === 1 ? 'bid' : 'bids'}
+                  </Badge>
+                </HStack>
+
+                {bids.length === 0 ? (
+                  <VStack py={8} spacing={4}>
+                    <Spinner size="lg" color="brand.secondary" />
+                    <Text color="gray.200" textAlign="center">
+                      Waiting for rider bids...
                     </Text>
-                  </HStack>
-                </CardBody>
-              </Card>
-            ))}
-          </VStack>
+                    <Text color="gray.400" fontSize="sm" textAlign="center">
+                      Riders will be notified of your delivery request and start placing their bids soon.
+                    </Text>
+                  </VStack>
+                ) : (
+                  <VStack spacing={4} align="stretch">
+                    {bids.map((bid) => (
+                      <Card key={bid.id} bg="rgba(26, 26, 46, 0.6)">
+                        <CardBody>
+                          <Stack direction={{ base: 'column', md: 'row' }} spacing={4} justify="space-between" align="center">
+                            <HStack spacing={4}>
+                              <Avatar size="md" name={bid.rider_name} src={bid.rider_avatar} />
+                              <Box>
+                                <Text color="white" fontWeight="bold">{bid.rider_name || 'Rider'}</Text>
+                                <Text color="gray.300" fontSize="sm">
+                                  {formatDate(bid.created_at)}
+                                </Text>
+                              </Box>
+                            </HStack>
+                            <Stack direction={{ base: 'column', sm: 'row' }} spacing={4} align="center">
+                              <HStack>
+                                <Icon as={FaMoneyBillWave} color="green.400" />
+                                <Text color="white" fontWeight="bold">
+                                  ₦{bid.amount.toLocaleString()}
+                                </Text>
+                              </HStack>
+                              <HStack>
+                                <Icon as={FaClock} color="blue.400" />
+                                <Text color="white">
+                                  {bid.estimated_time}
+                                </Text>
+                              </HStack>
+                            </Stack>
+                          </Stack>
+                        </CardBody>
+                      </Card>
+                    ))}
+                  </VStack>
+                )}
+              </VStack>
+            </CardBody>
+          </Card>
         </VStack>
       </ScaleFade>
     </Container>
