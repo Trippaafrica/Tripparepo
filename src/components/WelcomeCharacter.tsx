@@ -1,11 +1,10 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF, Float, Text } from '@react-three/drei';
+import { Float, Text, Box } from '@react-three/drei';
 import { Group } from 'three';
 
 export function WelcomeCharacter() {
   const group = useRef<Group>(null);
-  const { nodes, materials } = useGLTF('/models/delivery_robot.glb');
 
   useFrame((state) => {
     if (group.current) {
@@ -21,20 +20,19 @@ export function WelcomeCharacter() {
         rotationIntensity={0.2}
         floatIntensity={0.5}
       >
-        <primitive object={nodes.Scene} scale={2} />
+        <Box args={[1, 1, 1]} position={[0, 0, 0]}>
+          <meshStandardMaterial color="#39FF14" />
+        </Box>
       </Float>
       <Text
-        position={[0, 3, 0]}
+        position={[0, 2, 0]}
         fontSize={0.5}
         color="#39FF14"
         anchorX="center"
         anchorY="middle"
-        font="/fonts/Inter-Bold.woff"
       >
         Welcome to Trippa!
       </Text>
     </group>
   );
-}
-
-useGLTF.preload('/models/delivery_robot.glb'); 
+} 
