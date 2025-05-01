@@ -27,7 +27,6 @@ interface FormData {
   dropoff_location: string;
   item_description: string;
   weight: number | null;
-  dimensions: string | null;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
   pickup_coordinates: { lat: number; lng: number } | null;
   dropoff_coordinates: { lat: number; lng: number } | null;
@@ -55,7 +54,6 @@ const CreateDeliveryRequest = () => {
     dropoff_location: '',
     item_description: '',
     weight: null,
-    dimensions: null,
     status: 'pending',
     pickup_coordinates: null,
     dropoff_coordinates: null,
@@ -281,28 +279,16 @@ const CreateDeliveryRequest = () => {
             />
           </FormControl>
 
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
-            <FormControl>
-              <FormLabel>Weight (kg)</FormLabel>
-              <NumberInput
-                value={formData.weight || ''}
-                onChange={handleWeightChange}
-                min={0}
-              >
-                <NumberInputField placeholder="Enter weight in kg" />
-              </NumberInput>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Dimensions</FormLabel>
-              <Input
-                name="dimensions"
-                value={formData.dimensions || ''}
-                onChange={handleChange}
-                placeholder="e.g., 30x20x15 cm"
-              />
-            </FormControl>
-          </SimpleGrid>
+          <FormControl>
+            <FormLabel>Weight (kg)</FormLabel>
+            <NumberInput
+              value={formData.weight || ''}
+              onChange={handleWeightChange}
+              min={0}
+            >
+              <NumberInputField placeholder="Enter weight in kg" />
+            </NumberInput>
+          </FormControl>
 
           <Button
             type="submit"

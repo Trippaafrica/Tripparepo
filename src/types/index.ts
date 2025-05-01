@@ -8,7 +8,6 @@ export interface DeliveryRequest {
   dropoff_location: string;
   item_description: string;
   weight?: number;
-  dimensions?: string;
   created_at: string;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
 }
