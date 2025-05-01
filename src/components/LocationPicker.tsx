@@ -34,7 +34,7 @@ const LocationPicker = ({
   useEffect(() => {
     // Load Google Places API script
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDs4RceLiF6fMtfK9d-fGlA6HyfxlAOzVE&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDAPCO0RO432dTqJm0tH94o3g5s-kliK9o&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
