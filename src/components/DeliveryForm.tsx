@@ -1,3 +1,4 @@
+/// <reference types="@types/google.maps" />
 import { useState } from 'react';
 import {
   Box,
@@ -213,72 +214,131 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
   ];
 
   return (
-    <Container maxW="container.md" py={8}>
+    <Container maxW="container.lg" py={8}>
       <ScaleFade initialScale={0.9} in={true}>
-        <VStack spacing={8}>
-          <Card width="100%">
-            <CardBody>
-              <VStack spacing={8}>
-                <VStack spacing={2}>
-                  <Icon as={FaTruck} w={10} h={10} color="brand.secondary" />
-                  <Heading size="lg" textAlign="center" bgGradient="linear(to-r, brand.secondary, brand.primary)" bgClip="text">
-                    Book {deliveryType.charAt(0).toUpperCase() + deliveryType.slice(1)} Delivery
-                  </Heading>
-                </VStack>
-                <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-                  <VStack spacing={6}>
-                    <LocationPicker
+        <Card bg="rgba(26, 26, 46, 0.8)" backdropFilter="blur(10px)" border="1px solid rgba(157, 78, 221, 0.2)">
+          <CardBody>
+            <VStack spacing={6} align="stretch">
+              <VStack spacing={2} align="center">
+                <Icon as={FaTruck} w={10} h={10} color="brand.secondary" />
+                <Heading
+                  size="lg"
+                  color="brand.secondary"
+                  textAlign="center"
+                >
+                  {deliveryType.charAt(0).toUpperCase() + deliveryType.slice(1)} Delivery Request
+                </Heading>
+              </VStack>
+
+              <form onSubmit={handleSubmit}>
+                <VStack spacing={6}>
+                  <FormControl isRequired isInvalid={!!errors.pickup_location}>
+                    <FormLabel color="gray.200">
+                      <Icon as={FaMapMarkerAlt} mr={2} />
+                      Pickup Location
+                    </FormLabel>
+                    <Input
+                      name="pickup_location"
                       value={formData.pickup_location}
-                      onChange={(value) => setFormData(prev => ({ ...prev, pickup_location: value }))}
-                      onPlaceSelect={handleLocationSelect('pickup')}
-                      error={errors.pickup_location}
-                      label="Pickup Location"
+                      onChange={handleChange}
                       placeholder="Enter pickup address"
-                      isRequired
+                      color="white"
+                      _placeholder={{ color: 'gray.400' }}
+                      bg="rgba(26, 26, 46, 0.6)"
+                      borderColor="rgba(157, 78, 221, 0.2)"
+                      _hover={{
+                        borderColor: 'brand.primary',
+                      }}
+                      _focus={{
+                        borderColor: 'brand.secondary',
+                        boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                      }}
                     />
+                    <FormErrorMessage>{errors.pickup_location}</FormErrorMessage>
+                  </FormControl>
 
-                    <LocationPicker
+                  <FormControl isRequired isInvalid={!!errors.dropoff_location}>
+                    <FormLabel color="gray.200">
+                      <Icon as={FaMapMarkerAlt} mr={2} />
+                      Dropoff Location
+                    </FormLabel>
+                    <Input
+                      name="dropoff_location"
                       value={formData.dropoff_location}
-                      onChange={(value) => setFormData(prev => ({ ...prev, dropoff_location: value }))}
-                      onPlaceSelect={handleLocationSelect('dropoff')}
-                      error={errors.dropoff_location}
-                      label="Dropoff Location"
-                      placeholder="Enter dropoff address"
-                      isRequired
+                      onChange={handleChange}
+                      placeholder="Enter delivery address"
+                      color="white"
+                      _placeholder={{ color: 'gray.400' }}
+                      bg="rgba(26, 26, 46, 0.6)"
+                      borderColor="rgba(157, 78, 221, 0.2)"
+                      _hover={{
+                        borderColor: 'brand.primary',
+                      }}
+                      _focus={{
+                        borderColor: 'brand.secondary',
+                        boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                      }}
                     />
+                    <FormErrorMessage>{errors.dropoff_location}</FormErrorMessage>
+                  </FormControl>
 
-                    <FormControl isRequired isInvalid={!!errors.item_description}>
-                      <FormLabel display="flex" alignItems="center" gap={2}>
-                        <Icon as={FaBox} color="brand.secondary" />
-                        Item Description
-                      </FormLabel>
-                      <Textarea
-                        name="item_description"
-                        value={formData.item_description}
-                        onChange={handleChange}
-                        placeholder="Describe your items"
-                        _placeholder={{ color: 'gray.400' }}
-                      />
-                      <FormErrorMessage>{errors.item_description}</FormErrorMessage>
-                    </FormControl>
+                  <FormControl isRequired isInvalid={!!errors.item_description}>
+                    <FormLabel color="gray.200">
+                      <Icon as={FaBox} mr={2} />
+                      Item Description
+                    </FormLabel>
+                    <Textarea
+                      name="item_description"
+                      value={formData.item_description}
+                      onChange={handleChange}
+                      placeholder="Describe the item(s) to be delivered"
+                      color="white"
+                      _placeholder={{ color: 'gray.400' }}
+                      bg="rgba(26, 26, 46, 0.6)"
+                      borderColor="rgba(157, 78, 221, 0.2)"
+                      _hover={{
+                        borderColor: 'brand.primary',
+                      }}
+                      _focus={{
+                        borderColor: 'brand.secondary',
+                        boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                      }}
+                    />
+                    <FormErrorMessage>{errors.item_description}</FormErrorMessage>
+                  </FormControl>
 
+                  <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
                     <FormControl isInvalid={!!errors.weight}>
-                      <FormLabel display="flex" alignItems="center" gap={2}>
-                        <Icon as={FaWeightHanging} color="brand.secondary" />
+                      <FormLabel color="gray.200">
+                        <Icon as={FaWeightHanging} mr={2} />
                         Weight (kg)
                       </FormLabel>
-                      <NumberInput min={0} value={formData.weight || ''} onChange={handleWeightChange}>
+                      <NumberInput
+                        value={formData.weight || ''}
+                        onChange={handleWeightChange}
+                        min={0}
+                      >
                         <NumberInputField
                           placeholder="Enter weight"
+                          color="white"
                           _placeholder={{ color: 'gray.400' }}
+                          bg="rgba(26, 26, 46, 0.6)"
+                          borderColor="rgba(157, 78, 221, 0.2)"
+                          _hover={{
+                            borderColor: 'brand.primary',
+                          }}
+                          _focus={{
+                            borderColor: 'brand.secondary',
+                            boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                          }}
                         />
                       </NumberInput>
                       <FormErrorMessage>{errors.weight}</FormErrorMessage>
                     </FormControl>
 
                     <FormControl isInvalid={!!errors.dimensions}>
-                      <FormLabel display="flex" alignItems="center" gap={2}>
-                        <Icon as={FaRuler} color="brand.secondary" />
+                      <FormLabel color="gray.200">
+                        <Icon as={FaRuler} mr={2} />
                         Dimensions
                       </FormLabel>
                       <Input
@@ -286,91 +346,59 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
                         value={formData.dimensions}
                         onChange={handleChange}
                         placeholder="e.g., 30x20x15 cm"
+                        color="white"
                         _placeholder={{ color: 'gray.400' }}
+                        bg="rgba(26, 26, 46, 0.6)"
+                        borderColor="rgba(157, 78, 221, 0.2)"
+                        _hover={{
+                          borderColor: 'brand.primary',
+                        }}
+                        _focus={{
+                          borderColor: 'brand.secondary',
+                          boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
+                        }}
                       />
                       <FormErrorMessage>{errors.dimensions}</FormErrorMessage>
                     </FormControl>
+                  </SimpleGrid>
 
-                    <Button
-                      type="submit"
-                      colorScheme="brand"
-                      size="lg"
-                      width="full"
-                      isLoading={isLoading}
-                      mt={4}
-                      leftIcon={<Icon as={FaTruck} />}
-                      _hover={{
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(57, 255, 20, 0.3)',
-                      }}
-                    >
-                      Submit Request
-                    </Button>
-                  </VStack>
-                </form>
-              </VStack>
-            </CardBody>
-          </Card>
+                  <Button
+                    type="submit"
+                    colorScheme="brand"
+                    size="lg"
+                    width="full"
+                    isLoading={isLoading}
+                    loadingText="Creating request..."
+                  >
+                    Create Delivery Request
+                  </Button>
+                </VStack>
+              </form>
 
-          {/* Delivery Image Section */}
-          <Card width="100%">
-            <CardBody>
-              <VStack spacing={6}>
-                <Heading size="md" textAlign="center" color="brand.secondary">
-                  Why Choose Trippa?
-                </Heading>
-                <Image
-                  src={`/images/${deliveryType}-delivery.jpg`}
-                  alt={`${deliveryType} delivery service`}
-                  borderRadius="lg"
-                  fallbackSrc="https://via.placeholder.com/800x400?text=Delivery+Service"
-                  objectFit="cover"
-                  width="100%"
-                  height="300px"
-                />
-                <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} width="100%">
-                  {deliveryStories.map((story, index) => (
-                    <Card key={index} bg="rgba(26, 26, 46, 0.8)" border="1px solid" borderColor="rgba(157, 78, 221, 0.2)">
-                      <CardBody>
-                        <VStack spacing={3} align="start">
-                          <Icon as={story.icon} w={6} h={6} color={`${story.color}.400`} />
-                          <Heading size="sm" color="brand.secondary">
-                            {story.title}
-                          </Heading>
-                          <Text fontSize="sm" color="gray.400">
-                            {story.description}
-                          </Text>
-                        </VStack>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </SimpleGrid>
-              </VStack>
-            </CardBody>
-          </Card>
-
-          {/* Trust Badges */}
-          <Flex wrap="wrap" gap={4} justify="center" width="100%">
-            <Badge colorScheme="green" px={3} py={1} borderRadius="full">
-              <Flex align="center" gap={2}>
-                <Icon as={FaShieldAlt} />
-                <Text>Secure Delivery</Text>
-              </Flex>
-            </Badge>
-            <Badge colorScheme="blue" px={3} py={1} borderRadius="full">
-              <Flex align="center" gap={2}>
-                <Icon as={FaClock} />
-                <Text>24/7 Support</Text>
-              </Flex>
-            </Badge>
-            <Badge colorScheme="purple" px={3} py={1} borderRadius="full">
-              <Flex align="center" gap={2}>
-                <Icon as={FaStar} />
-                <Text>Rated 4.8/5</Text>
-              </Flex>
-            </Badge>
-          </Flex>
-        </VStack>
+              <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4} mt={8}>
+                {deliveryStories.map((story, index) => (
+                  <Card
+                    key={index}
+                    bg="rgba(26, 26, 46, 0.6)"
+                    border="1px solid rgba(157, 78, 221, 0.2)"
+                  >
+                    <CardBody>
+                      <VStack spacing={3}>
+                        <Icon as={story.icon} w={6} h={6} color={`${story.color}.400`} />
+                        <Text color="white" fontWeight="bold">
+                          {story.title}
+                        </Text>
+                        <Text color="gray.300" fontSize="sm" textAlign="center">
+                          {story.description}
+                        </Text>
+                      </VStack>
+                    </CardBody>
+                  </Card>
+                ))}
+              </SimpleGrid>
+            </VStack>
+          </CardBody>
+        </Card>
       </ScaleFade>
     </Container>
   );
