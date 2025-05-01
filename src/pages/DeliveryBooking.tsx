@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Box, Heading, Text, VStack } from '@chakra-ui/react';
-import DeliveryForm from '../components/DeliveryForm';
+import CreateDeliveryRequest from '../components/CreateDeliveryRequest';
 import { DeliveryType } from '../types';
 
 const DeliveryBooking = () => {
@@ -17,7 +17,7 @@ const DeliveryBooking = () => {
     );
   }
 
-  return <DeliveryForm deliveryType={type} />;
+  return <CreateDeliveryRequest />;
 };
 
 export default DeliveryBooking; 
