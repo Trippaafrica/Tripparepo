@@ -24,7 +24,7 @@ interface FormData {
   delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
   pickup_address: string;
   dropoff_address: string;
-  weight: number | null;
+  package_weight: number | null;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
   pickup_coordinates: { lat: number; lng: number } | null;
   dropoff_coordinates: { lat: number; lng: number } | null;
@@ -50,7 +50,7 @@ const DeliveryRequestForm = () => {
     delivery_type: 'bike',
     pickup_address: '',
     dropoff_address: '',
-    weight: null,
+    package_weight: null,
     status: 'pending',
     pickup_coordinates: null,
     dropoff_coordinates: null,
@@ -158,7 +158,7 @@ const DeliveryRequestForm = () => {
   const handleWeightChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      weight: value ? parseFloat(value) : null,
+      package_weight: value ? parseFloat(value) : null,
     }));
   };
 
@@ -267,13 +267,13 @@ const DeliveryRequestForm = () => {
           </FormControl>
 
           <FormControl>
-            <FormLabel>Weight (kg)</FormLabel>
+            <FormLabel>Package Weight (kg)</FormLabel>
             <NumberInput
-              value={formData.weight || ''}
+              value={formData.package_weight || ''}
               onChange={handleWeightChange}
               min={0}
             >
-              <NumberInputField placeholder="Enter weight in kg" />
+              <NumberInputField placeholder="Enter package weight in kg" />
             </NumberInput>
           </FormControl>
 
