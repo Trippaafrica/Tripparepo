@@ -68,7 +68,7 @@ const riderBenefits = [
   },
   {
     title: "Competitive Earnings",
-    description: "Earn up to $25 per delivery with surge pricing",
+    description: "Earn up to ₦25,000 per delivery with surge pricing",
     icon: FaMoneyBillWave,
     color: "yellow",
   },

@@ -28,6 +28,7 @@ import { supabase } from '../services/supabase';
 import { DeliveryType } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { FaTruck, FaMapMarkerAlt, FaBox, FaWeightHanging, FaRuler, FaStar, FaClock, FaShieldAlt } from 'react-icons/fa';
+import LocationPicker from './LocationPicker';
 
 interface DeliveryFormProps {
   deliveryType: DeliveryType;
@@ -39,6 +40,14 @@ interface FormData {
   item_description: string;
   weight?: number;
   dimensions?: string;
+  pickup_coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  dropoff_coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 interface FormErrors {
@@ -123,6 +132,8 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
             item_description: formData.item_description.trim(),
             weight: formData.weight || null,
             dimensions: formData.dimensions?.trim() || null,
+            pickup_coordinates: formData.pickup_coordinates,
+            dropoff_coordinates: formData.dropoff_coordinates,
             status: 'pending',
           },
         ])
@@ -148,6 +159,19 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLocationSelect = (type: 'pickup' | 'dropoff') => (place: google.maps.places.PlaceResult) => {
+    const location = place.geometry?.location;
+    if (location) {
+      setFormData(prev => ({
+        ...prev,
+        [`${type}_coordinates`]: {
+          lat: location.lat(),
+          lng: location.lng(),
+        },
+      }));
     }
   };
 
@@ -203,35 +227,25 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
                 </VStack>
                 <form onSubmit={handleSubmit} style={{ width: '100%' }}>
                   <VStack spacing={6}>
-                    <FormControl isRequired isInvalid={!!errors.pickup_location}>
-                      <FormLabel display="flex" alignItems="center" gap={2}>
-                        <Icon as={FaMapMarkerAlt} color="brand.secondary" />
-                        Pickup Location
-                      </FormLabel>
-                      <Input
-                        name="pickup_location"
-                        value={formData.pickup_location}
-                        onChange={handleChange}
-                        placeholder="Enter pickup address"
-                        _placeholder={{ color: 'gray.400' }}
-                      />
-                      <FormErrorMessage>{errors.pickup_location}</FormErrorMessage>
-                    </FormControl>
+                    <LocationPicker
+                      value={formData.pickup_location}
+                      onChange={(value) => setFormData(prev => ({ ...prev, pickup_location: value }))}
+                      onPlaceSelect={handleLocationSelect('pickup')}
+                      error={errors.pickup_location}
+                      label="Pickup Location"
+                      placeholder="Enter pickup address"
+                      isRequired
+                    />
 
-                    <FormControl isRequired isInvalid={!!errors.dropoff_location}>
-                      <FormLabel display="flex" alignItems="center" gap={2}>
-                        <Icon as={FaMapMarkerAlt} color="brand.secondary" />
-                        Dropoff Location
-                      </FormLabel>
-                      <Input
-                        name="dropoff_location"
-                        value={formData.dropoff_location}
-                        onChange={handleChange}
-                        placeholder="Enter dropoff address"
-                        _placeholder={{ color: 'gray.400' }}
-                      />
-                      <FormErrorMessage>{errors.dropoff_location}</FormErrorMessage>
-                    </FormControl>
+                    <LocationPicker
+                      value={formData.dropoff_location}
+                      onChange={(value) => setFormData(prev => ({ ...prev, dropoff_location: value }))}
+                      onPlaceSelect={handleLocationSelect('dropoff')}
+                      error={errors.dropoff_location}
+                      label="Dropoff Location"
+                      placeholder="Enter dropoff address"
+                      isRequired
+                    />
 
                     <FormControl isRequired isInvalid={!!errors.item_description}>
                       <FormLabel display="flex" alignItems="center" gap={2}>

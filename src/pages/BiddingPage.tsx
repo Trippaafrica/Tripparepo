@@ -145,7 +145,7 @@ const BiddingPage = () => {
                         type="number"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Enter amount"
+                        placeholder="Enter amount in ₦"
                         required
                       />
                     </Box>
@@ -183,7 +183,7 @@ const BiddingPage = () => {
                 <CardBody>
                   <HStack justify="space-between">
                     <VStack align="start" spacing={1}>
-                      <Text fontWeight="bold">${bid.amount}</Text>
+                      <Text fontWeight="bold">₦{bid.amount}</Text>
                       <Text fontSize="sm" color="gray.400">
                         Delivery by: {new Date(bid.delivery_time).toLocaleString()}
                       </Text>
