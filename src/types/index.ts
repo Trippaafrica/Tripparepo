@@ -21,6 +21,11 @@ export interface Bid {
   status: 'pending' | 'accepted' | 'rejected';
 }
 
+export interface Rider {
+  id: string;
+  rating: number;
+}
+
 export interface User {
   id: string;
   email: string;

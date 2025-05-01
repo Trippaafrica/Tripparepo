@@ -22,7 +22,7 @@ import {
 import { useParams } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 
 interface DeliveryRequest {
   id: string;
@@ -45,6 +45,7 @@ interface Bid {
   created_at: string;
   rider_name?: string;
   rider_avatar?: string;
+  rider_rating?: number;
 }
 
 const BiddingPage = () => {
@@ -104,7 +105,16 @@ const BiddingPage = () => {
     try {
       const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
-        .select('*')
+        .select(`
+          *,
+          profiles:rider_id (
+            full_name,
+            avatar_url
+          ),
+          riders:rider_id (
+            rating
+          )
+        `)
         .eq('delivery_request_id', requestId)
         .order('created_at', { ascending: false });
 
@@ -112,8 +122,9 @@ const BiddingPage = () => {
 
       const formattedBids = bidsData.map(bid => ({
         ...bid,
-        rider_name: 'Rider', // Default name for now
-        rider_avatar: undefined, // No avatar for now
+        rider_name: bid.profiles?.full_name || 'Rider',
+        rider_avatar: bid.profiles?.avatar_url,
+        rider_rating: bid.riders?.rating || 0
       }));
 
       setBids(formattedBids);
@@ -228,7 +239,13 @@ const BiddingPage = () => {
                             <HStack spacing={4}>
                               <Avatar size="md" name={bid.rider_name} src={bid.rider_avatar} />
                               <Box>
-                                <Text color="white" fontWeight="bold">{bid.rider_name || 'Rider'}</Text>
+                                <Text color="white" fontWeight="bold">{bid.rider_name}</Text>
+                                <HStack spacing={1}>
+                                  <Icon as={FaStar} color="yellow.400" />
+                                  <Text color="gray.300" fontSize="sm">
+                                    {bid.rider_rating?.toFixed(1)}
+                                  </Text>
+                                </HStack>
                                 <Text color="gray.300" fontSize="sm">
                                   {formatDate(bid.created_at)}
                                 </Text>
@@ -243,7 +260,7 @@ const BiddingPage = () => {
                               </HStack>
                               <HStack>
                                 <Icon as={FaClock} color="blue.400" />
-                                <Text color="white">
+                                <Text color="white" fontWeight="bold">
                                   {bid.estimated_time}
                                 </Text>
                               </HStack>
