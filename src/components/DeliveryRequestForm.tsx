@@ -28,15 +28,15 @@ interface FormData {
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
   pickup_coordinates: { lat: number; lng: number } | null;
   dropoff_coordinates: { lat: number; lng: number } | null;
-  sender_name: string;
-  sender_phone: string;
-  receiver_name: string;
-  receiver_phone: string;
+  pickup_contact_name: string;
+  pickup_contact_phone: string;
+  dropoff_contact_name: string;
+  dropoff_contact_phone: string;
 }
 
 interface FormErrors {
-  sender_phone?: string;
-  receiver_phone?: string;
+  pickup_contact_phone?: string;
+  dropoff_contact_phone?: string;
 }
 
 const DeliveryRequestForm = () => {
@@ -54,22 +54,22 @@ const DeliveryRequestForm = () => {
     status: 'pending',
     pickup_coordinates: null,
     dropoff_coordinates: null,
-    sender_name: '',
-    sender_phone: '',
-    receiver_name: '',
-    receiver_phone: '',
+    pickup_contact_name: '',
+    pickup_contact_phone: '',
+    dropoff_contact_name: '',
+    dropoff_contact_phone: '',
   });
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     
     // Validate phone numbers
-    if (!/^\+?[1-9]\d{9,14}$/.test(formData.sender_phone.trim())) {
-      newErrors.sender_phone = 'Please enter a valid phone number';
+    if (!/^\+?[1-9]\d{9,14}$/.test(formData.pickup_contact_phone.trim())) {
+      newErrors.pickup_contact_phone = 'Please enter a valid phone number';
     }
     
-    if (!/^\+?[1-9]\d{9,14}$/.test(formData.receiver_phone.trim())) {
-      newErrors.receiver_phone = 'Please enter a valid phone number';
+    if (!/^\+?[1-9]\d{9,14}$/.test(formData.dropoff_contact_phone.trim())) {
+      newErrors.dropoff_contact_phone = 'Please enter a valid phone number';
     }
 
     setErrors(newErrors);
@@ -184,30 +184,30 @@ const DeliveryRequestForm = () => {
             <FormControl isRequired>
               <FormLabel>
                 <Icon as={FaUser} mr={2} />
-                Sender Name
+                Pickup Contact Name
               </FormLabel>
               <Input
-                name="sender_name"
-                value={formData.sender_name}
+                name="pickup_contact_name"
+                value={formData.pickup_contact_name}
                 onChange={handleChange}
-                placeholder="Enter sender name"
+                placeholder="Enter pickup contact name"
               />
             </FormControl>
 
-            <FormControl isRequired isInvalid={!!errors.sender_phone}>
+            <FormControl isRequired isInvalid={!!errors.pickup_contact_phone}>
               <FormLabel>
                 <Icon as={FaPhone} mr={2} />
-                Sender Phone
+                Pickup Contact Phone
               </FormLabel>
               <Input
-                name="sender_phone"
-                value={formData.sender_phone}
+                name="pickup_contact_phone"
+                value={formData.pickup_contact_phone}
                 onChange={handleChange}
-                placeholder="Enter sender phone"
+                placeholder="Enter pickup contact phone"
               />
-              {errors.sender_phone && (
+              {errors.pickup_contact_phone && (
                 <Text color="red.500" fontSize="sm" mt={1}>
-                  {errors.sender_phone}
+                  {errors.pickup_contact_phone}
                 </Text>
               )}
             </FormControl>
@@ -217,30 +217,30 @@ const DeliveryRequestForm = () => {
             <FormControl isRequired>
               <FormLabel>
                 <Icon as={FaUser} mr={2} />
-                Receiver Name
+                Dropoff Contact Name
               </FormLabel>
               <Input
-                name="receiver_name"
-                value={formData.receiver_name}
+                name="dropoff_contact_name"
+                value={formData.dropoff_contact_name}
                 onChange={handleChange}
-                placeholder="Enter receiver name"
+                placeholder="Enter dropoff contact name"
               />
             </FormControl>
 
-            <FormControl isRequired isInvalid={!!errors.receiver_phone}>
+            <FormControl isRequired isInvalid={!!errors.dropoff_contact_phone}>
               <FormLabel>
                 <Icon as={FaPhone} mr={2} />
-                Receiver Phone
+                Dropoff Contact Phone
               </FormLabel>
               <Input
-                name="receiver_phone"
-                value={formData.receiver_phone}
+                name="dropoff_contact_phone"
+                value={formData.dropoff_contact_phone}
                 onChange={handleChange}
-                placeholder="Enter receiver phone"
+                placeholder="Enter dropoff contact phone"
               />
-              {errors.receiver_phone && (
+              {errors.dropoff_contact_phone && (
                 <Text color="red.500" fontSize="sm" mt={1}>
-                  {errors.receiver_phone}
+                  {errors.dropoff_contact_phone}
                 </Text>
               )}
             </FormControl>
