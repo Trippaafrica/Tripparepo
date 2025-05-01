@@ -37,10 +37,12 @@ interface DeliveryRequest {
 
 interface Bid {
   id: string;
+  delivery_request_id: string;
+  rider_id: string;
   amount: number;
   estimated_time: string;
+  status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
-  rider_id: string;
   rider_name?: string;
   rider_avatar?: string;
 }
@@ -102,13 +104,7 @@ const BiddingPage = () => {
     try {
       const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
-        .select(`
-          *,
-          riders:rider_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('delivery_request_id', requestId)
         .order('created_at', { ascending: false });
 
@@ -116,8 +112,8 @@ const BiddingPage = () => {
 
       const formattedBids = bidsData.map(bid => ({
         ...bid,
-        rider_name: bid.riders?.full_name,
-        rider_avatar: bid.riders?.avatar_url,
+        rider_name: 'Rider', // Default name for now
+        rider_avatar: undefined, // No avatar for now
       }));
 
       setBids(formattedBids);
