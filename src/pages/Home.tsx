@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { FaMotorcycle, FaTruck, FaTruckMoving, FaGasPump, FaStar, FaClock, FaShieldAlt, FaUsers, FaMapMarkedAlt, FaMoneyBillWave, FaRoute } from 'react-icons/fa';
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { Scene3D } from '../components/Scene3D';
 
 const deliveryTypes = [
   {
@@ -113,24 +114,35 @@ const Home = () => {
           opacity={0.1}
         />
         <Container maxW="container.xl">
-          <VStack spacing={8} position="relative" zIndex={1}>
-            <Heading
-              size="2xl"
-              textAlign="center"
-              color="white"
-              textShadow="0 2px 4px rgba(0,0,0,0.2)"
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} alignItems="center">
+            <VStack spacing={8} position="relative" zIndex={1}>
+              <Heading
+                size="2xl"
+                textAlign="center"
+                color="white"
+                textShadow="0 2px 4px rgba(0,0,0,0.2)"
+              >
+                Fast & Reliable Delivery Services
+              </Heading>
+              <Text
+                fontSize="xl"
+                color="gray.200"
+                textAlign="center"
+                maxW="2xl"
+              >
+                Choose from our range of delivery options and get your items delivered safely and on time
+              </Text>
+            </VStack>
+            <Box
+              position="relative"
+              height="400px"
+              borderRadius="xl"
+              overflow="hidden"
+              boxShadow="0 8px 32px rgba(57, 255, 20, 0.2)"
             >
-              Fast & Reliable Delivery Services
-            </Heading>
-            <Text
-              fontSize="xl"
-              color="gray.200"
-              textAlign="center"
-              maxW="2xl"
-            >
-              Choose from our range of delivery options and get your items delivered safely and on time
-            </Text>
-          </VStack>
+              <Scene3D />
+            </Box>
+          </SimpleGrid>
         </Container>
       </Box>
 
