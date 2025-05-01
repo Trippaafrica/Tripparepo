@@ -3,7 +3,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import { FaMotorcycle, FaTruck, FaTruckMoving, FaGasPump, FaStar, FaClock, FaShieldAlt, FaUsers, FaMapMarkedAlt, FaMoneyBillWave, FaRoute } from 'react-icons/fa';
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { PackageScene } from '../components/PackageScene';
 
 const deliveryTypes = [
   {
@@ -132,6 +131,19 @@ const Home = () => {
               >
                 Choose from our range of delivery options and get your items delivered safely and on time
               </Text>
+              <Button
+                as={RouterLink}
+                to="/delivery"
+                size="lg"
+                colorScheme="brand"
+                leftIcon={<Icon as={FaMotorcycle} />}
+                _hover={{
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(57, 255, 20, 0.3)',
+                }}
+              >
+                Book Now
+              </Button>
             </VStack>
             <Box
               position="relative"
@@ -140,9 +152,18 @@ const Home = () => {
               borderRadius="xl"
               overflow="hidden"
               boxShadow="0 8px 32px rgba(57, 255, 20, 0.2)"
-              bg="rgba(138, 43, 226, 0.2)"
+              bgGradient="radial(circle at center, brand.primary, brand.dark)"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
             >
-              <PackageScene />
+              <Icon
+                as={FaMotorcycle}
+                w={32}
+                h={32}
+                color="brand.secondary"
+                filter="drop-shadow(0 0 20px rgba(57, 255, 20, 0.4))"
+              />
             </Box>
           </SimpleGrid>
         </Container>
