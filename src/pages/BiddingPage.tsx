@@ -37,9 +37,7 @@ interface DeliveryRequest {
 
 interface Profile {
   full_name: string;
-  avatar_url: string | null;
-  average_rating: number;
-  total_ratings: number;
+  rating: number;
 }
 
 interface Bid {
@@ -51,9 +49,8 @@ interface Bid {
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   rider_name?: string;
-  rider_avatar?: string | null;
   rider_rating?: number;
-  profiles?: Profile;
+  rider?: Profile;
 }
 
 interface SupabaseBid extends Omit<Bid, 'profiles'> {
@@ -148,18 +145,9 @@ const BiddingPage = () => {
       const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
         .select(`
-          id,
-          delivery_request_id,
-          rider_id,
-          amount,
-          estimated_time,
-          status,
-          created_at,
-          profiles:rider_id (
-            full_name,
-            avatar_url,
-            average_rating,
-            total_ratings
+          *,
+          riders:rider_id (
+            rating
           )
         `)
         .eq('delivery_request_id', requestId)
@@ -187,10 +175,9 @@ const BiddingPage = () => {
         estimated_time: bid.estimated_time,
         status: bid.status,
         created_at: bid.created_at,
-        rider_name: bid.profiles?.full_name || 'Rider',
-        rider_avatar: bid.profiles?.avatar_url,
-        rider_rating: bid.profiles?.average_rating || 0,
-        profiles: bid.profiles
+        rider_name: 'Rider ' + bid.rider_id.substring(0, 4),
+        rider_rating: bid.riders?.rating || 0,
+        rider: bid.riders
       })) as Bid[];
 
       console.log('Formatted bids:', formattedBids);
@@ -355,7 +342,7 @@ const BiddingPage = () => {
                         <CardBody>
                           <Stack direction={{ base: 'column', md: 'row' }} spacing={4} justify="space-between" align="center">
                             <HStack spacing={4}>
-                              <Avatar size="md" name={bid.rider_name} src={bid.rider_avatar} />
+                              <Avatar size="md" name={bid.rider_name} />
                               <Box>
                                 <Text color="white" fontWeight="bold">{bid.rider_name}</Text>
                                 <HStack spacing={1}>
