@@ -35,6 +35,13 @@ interface DeliveryRequest {
   status: string;
 }
 
+interface Profile {
+  full_name: string;
+  avatar_url: string | null;
+  average_rating: number;
+  total_ratings: number;
+}
+
 interface Bid {
   id: string;
   delivery_request_id: string;
@@ -44,8 +51,13 @@ interface Bid {
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   rider_name?: string;
-  rider_avatar?: string;
+  rider_avatar?: string | null;
   rider_rating?: number;
+  profiles?: Profile;
+}
+
+interface SupabaseBid extends Omit<Bid, 'profiles'> {
+  profiles: Profile;
 }
 
 const BiddingPage = () => {
@@ -103,16 +115,51 @@ const BiddingPage = () => {
 
   const fetchBids = async () => {
     try {
+      console.log('Fetching bids for request:', requestId);
+      
+      // First, verify the request ID
+      if (!requestId) {
+        throw new Error('No request ID provided');
+      }
+
+      // First verify that the user has access to this delivery request
+      const { data: requestData, error: requestError } = await supabase
+        .from('delivery_requests')
+        .select('id, user_id')
+        .eq('id', requestId)
+        .single();
+
+      if (requestError) {
+        console.error('Error fetching delivery request:', requestError);
+        throw new Error('Could not verify access to delivery request');
+      }
+
+      if (!requestData) {
+        throw new Error('Delivery request not found');
+      }
+
+      if (requestData.user_id !== user?.id) {
+        throw new Error('You do not have permission to view these bids');
+      }
+
+      // Now fetch the bids
+      console.log('Fetching bids...');
+      
       const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
         .select(`
-          *,
+          id,
+          delivery_request_id,
+          rider_id,
+          amount,
+          estimated_time,
+          status,
+          created_at,
           profiles:rider_id (
             full_name,
-            avatar_url
-          ),
-          riders:rider_id (
-            rating
+            avatar_url,
+            average_rating,
+            total_ratings
           )
         `)
         .eq('delivery_request_id', requestId)
@@ -120,22 +167,42 @@ const BiddingPage = () => {
         .order('amount', { ascending: true })
         .order('created_at', { ascending: true });
 
-      if (bidsError) throw bidsError;
+      if (bidsError) {
+        console.error('Supabase error details:', {
+          message: bidsError.message,
+          details: bidsError.details,
+          hint: bidsError.hint,
+          code: bidsError.code
+        });
+        throw new Error(`Database error: ${bidsError.message}${bidsError.details ? ` - ${bidsError.details}` : ''}`);
+      }
 
-      const formattedBids = bidsData.map(bid => ({
-        ...bid,
+      console.log('Received bids data:', bidsData);
+
+      const formattedBids = (bidsData || []).map((bid: any) => ({
+        id: bid.id,
+        delivery_request_id: bid.delivery_request_id,
+        rider_id: bid.rider_id,
+        amount: bid.amount,
+        estimated_time: bid.estimated_time,
+        status: bid.status,
+        created_at: bid.created_at,
         rider_name: bid.profiles?.full_name || 'Rider',
         rider_avatar: bid.profiles?.avatar_url,
-        rider_rating: bid.riders?.rating || 0
-      }));
+        rider_rating: bid.profiles?.average_rating || 0,
+        profiles: bid.profiles
+      })) as Bid[];
 
+      console.log('Formatted bids:', formattedBids);
       setBids(formattedBids);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Full error details:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch bids',
+        description: error.message || 'Failed to fetch bids',
         status: 'error',
         duration: 5000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
