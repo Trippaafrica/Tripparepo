@@ -8,6 +8,7 @@ import BiddingPage from './pages/BiddingPage';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import OrderSummary from './pages/OrderSummary';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -52,6 +53,14 @@ export default function AppRoutes() {
             element={
               <ProtectedRoute>
                 <OrderSummary />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment-success"
+            element={
+              <ProtectedRoute>
+                <PaymentSuccess />
               </ProtectedRoute>
             }
           />

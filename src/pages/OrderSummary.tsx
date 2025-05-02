@@ -93,11 +93,14 @@ const OrderSummary = () => {
     return bidAmount + SERVICE_CHARGE;
   };
 
+  const reference = `pay_${requestId}_${Date.now()}`;
+  
   const config = {
-    reference: `pay_${requestId}_${Date.now()}`,
+    reference,
     email: user?.email || '',
     amount: bid ? calculateTotalFee(bid.amount) * 100 : 0, // Convert to kobo
     publicKey: 'pk_live_023a80793215431bdc8c277e9591b024005202a5',
+    callback_url: `${window.location.origin}/payment-success?reference=${reference}&requestId=${requestId}`,
   };
 
   const onSuccess = async (reference: any) => {
