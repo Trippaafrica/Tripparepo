@@ -252,8 +252,8 @@ const BiddingPage = () => {
       const { error: requestUpdateError } = await supabase
         .from('delivery_requests')
         .update({ 
-          status: 'accepted',
-          payment_status: 'pending' // Initialize payment status
+          status: 'accepted'
+          // payment_status will be added back after migration is applied
         })
         .eq('id', requestId)
         .eq('user_id', user?.id); // Additional safety check
