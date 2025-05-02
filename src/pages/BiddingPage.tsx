@@ -116,7 +116,9 @@ const BiddingPage = () => {
           )
         `)
         .eq('delivery_request_id', requestId)
-        .order('created_at', { ascending: false });
+        .eq('status', 'pending')
+        .order('amount', { ascending: true })
+        .order('created_at', { ascending: true });
 
       if (bidsError) throw bidsError;
 
@@ -145,6 +147,55 @@ const BiddingPage = () => {
       dateStyle: 'medium',
       timeStyle: 'short',
     });
+  };
+
+  const acceptBid = async (bidId: string) => {
+    try {
+      // Start a transaction to update both the bid and delivery request
+      const { data: bid, error: bidError } = await supabase
+        .from('bids')
+        .update({ status: 'accepted' })
+        .eq('id', bidId)
+        .select()
+        .single();
+
+      if (bidError) throw bidError;
+
+      // Update delivery request status
+      const { error: requestError } = await supabase
+        .from('delivery_requests')
+        .update({ status: 'accepted' })
+        .eq('id', requestId);
+
+      if (requestError) throw requestError;
+
+      // Reject all other bids for this delivery request
+      const { error: rejectError } = await supabase
+        .from('bids')
+        .update({ status: 'rejected' })
+        .eq('delivery_request_id', requestId)
+        .neq('id', bidId);
+
+      if (rejectError) throw rejectError;
+
+      toast({
+        title: 'Success',
+        description: 'Bid accepted successfully',
+        status: 'success',
+        duration: 5000,
+      });
+
+      // Refresh bids
+      fetchBids();
+      fetchDeliveryRequest();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to accept bid',
+        status: 'error',
+        duration: 5000,
+      });
+    }
   };
 
   if (isLoading) {
@@ -214,7 +265,7 @@ const BiddingPage = () => {
             <CardBody>
               <VStack spacing={4} align="stretch">
                 <HStack spacing={4} justify="space-between">
-                  <Heading size="md" color="brand.secondary">Rider Bids</Heading>
+                  <Heading size="md" color="brand.secondary">Available Bids</Heading>
                   <Badge colorScheme={bids.length > 0 ? "green" : "yellow"}>
                     {bids.length} {bids.length === 1 ? 'bid' : 'bids'}
                   </Badge>
@@ -252,18 +303,29 @@ const BiddingPage = () => {
                               </Box>
                             </HStack>
                             <Stack direction={{ base: 'column', sm: 'row' }} spacing={4} align="center">
-                              <HStack>
-                                <Icon as={FaMoneyBillWave} color="green.400" />
-                                <Text color="white" fontWeight="bold">
-                                  ₦{bid.amount.toLocaleString()}
-                                </Text>
-                              </HStack>
-                              <HStack>
-                                <Icon as={FaClock} color="blue.400" />
-                                <Text color="white" fontWeight="bold">
-                                  {bid.estimated_time}
-                                </Text>
-                              </HStack>
+                              <VStack spacing={2}>
+                                <HStack>
+                                  <Icon as={FaMoneyBillWave} color="green.400" />
+                                  <Text color="white" fontWeight="bold">
+                                    ₦{bid.amount.toLocaleString()}
+                                  </Text>
+                                </HStack>
+                                <HStack>
+                                  <Icon as={FaClock} color="blue.400" />
+                                  <Text color="white" fontWeight="bold">
+                                    {bid.estimated_time}
+                                  </Text>
+                                </HStack>
+                              </VStack>
+                              {request?.status === 'pending' && (
+                                <Button
+                                  colorScheme="brand"
+                                  size="sm"
+                                  onClick={() => acceptBid(bid.id)}
+                                >
+                                  Accept Bid
+                                </Button>
+                              )}
                             </Stack>
                           </Stack>
                         </CardBody>
