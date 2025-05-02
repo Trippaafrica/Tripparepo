@@ -95,47 +95,12 @@ const OrderSummary = () => {
 
   const reference = `pay_${requestId}_${Date.now()}`;
   
-  const config = {
-    reference,
-    email: user?.email || '',
-    amount: bid ? calculateTotalFee(bid.amount) * 100 : 0, // Convert to kobo
-    publicKey: 'pk_live_023a80793215431bdc8c277e9591b024005202a5',
-    callback_url: `${window.location.origin}/payment-success?reference=${reference}&requestId=${requestId}`,
+  const handleSuccess = (response: any) => {
+    // Navigate to success page with reference and requestId
+    navigate(`/payment-success?reference=${response.reference}&requestId=${requestId}`);
   };
 
-  const onSuccess = async (reference: any) => {
-    try {
-      // Update payment status in the database
-      const { error: updateError } = await supabase
-        .from('delivery_requests')
-        .update({
-          payment_status: 'paid',
-          payment_reference: reference.reference,
-        })
-        .eq('id', requestId);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: 'Payment Successful',
-        description: 'Your payment has been processed successfully',
-        status: 'success',
-        duration: 5000,
-      });
-
-      // Navigate to tracking page or dashboard
-      navigate('/dashboard');
-    } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update payment status',
-        status: 'error',
-        duration: 5000,
-      });
-    }
-  };
-
-  const onClose = () => {
+  const handleClose = () => {
     toast({
       title: 'Payment Cancelled',
       description: 'You can try the payment again when ready',
@@ -144,7 +109,18 @@ const OrderSummary = () => {
     });
   };
 
+  const config = {
+    reference,
+    email: user?.email || '',
+    amount: bid ? calculateTotalFee(bid.amount) * 100 : 0, // Convert to kobo
+    publicKey: 'pk_live_023a80793215431bdc8c277e9591b024005202a5',
+  };
+
   const initializePayment = usePaystackPayment(config);
+
+  const handlePayment = () => {
+    initializePayment(handleSuccess, handleClose);
+  };
 
   if (isLoading) {
     return (
@@ -239,9 +215,7 @@ const OrderSummary = () => {
                   <Button
                     colorScheme="brand"
                     size="lg"
-                    onClick={() => {
-                      initializePayment(onSuccess, onClose);
-                    }}
+                    onClick={handlePayment}
                     isDisabled={!bid}
                   >
                     Pay Now
