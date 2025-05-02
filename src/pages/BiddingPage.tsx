@@ -19,7 +19,7 @@ import {
   Stack,
   Avatar,
 } from '@chakra-ui/react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar } from 'react-icons/fa';
@@ -61,6 +61,7 @@ const BiddingPage = () => {
   const { requestId } = useParams<{ requestId: string }>();
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [bids, setBids] = useState<Bid[]>([]);
   const [request, setRequest] = useState<DeliveryRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -239,10 +240,9 @@ const BiddingPage = () => {
         duration: 5000,
       });
 
-      // Refresh bids
-      fetchBids();
-      fetchDeliveryRequest();
-    } catch (error) {
+      // Navigate to the order summary page
+      navigate(`/order-summary/${requestId}/${bidId}`);
+    } catch (error: any) {
       toast({
         title: 'Error',
         description: 'Failed to accept bid',

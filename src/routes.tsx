@@ -7,6 +7,7 @@ import DeliveryBooking from './pages/DeliveryBooking';
 import BiddingPage from './pages/BiddingPage';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import OrderSummary from './pages/OrderSummary';
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,14 @@ export default function AppRoutes() {
             element={
               <ProtectedRoute>
                 <BiddingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order-summary/:requestId/:bidId"
+            element={
+              <ProtectedRoute>
+                <OrderSummary />
               </ProtectedRoute>
             }
           />

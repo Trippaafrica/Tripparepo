@@ -41,10 +41,10 @@ interface FormData {
   item_description: string;
   weight?: number;
   dimensions?: string;
-  sender_name: string;
-  sender_phone: string;
-  receiver_name: string;
-  receiver_phone: string;
+  pickup_contact_name: string;
+  pickup_contact_phone: string;
+  dropoff_contact_name: string;
+  dropoff_contact_phone: string;
   pickup_coordinates?: {
     lat: number;
     lng: number;
@@ -61,10 +61,10 @@ interface FormErrors {
   item_description?: string;
   weight?: string;
   dimensions?: string;
-  sender_name?: string;
-  sender_phone?: string;
-  receiver_name?: string;
-  receiver_phone?: string;
+  pickup_contact_name?: string;
+  pickup_contact_phone?: string;
+  dropoff_contact_name?: string;
+  dropoff_contact_phone?: string;
 }
 
 const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
@@ -79,10 +79,10 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
     item_description: '',
     weight: undefined,
     dimensions: '',
-    sender_name: '',
-    sender_phone: '',
-    receiver_name: '',
-    receiver_phone: '',
+    pickup_contact_name: '',
+    pickup_contact_phone: '',
+    dropoff_contact_name: '',
+    dropoff_contact_phone: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -102,24 +102,24 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
       newErrors.item_description = 'Item description is required';
     }
 
-    if (!formData.sender_name.trim()) {
-      newErrors.sender_name = 'Sender name is required';
+    if (!formData.pickup_contact_name.trim()) {
+      newErrors.pickup_contact_name = 'Pickup contact name is required';
     }
 
-    if (!formData.sender_phone.trim()) {
-      newErrors.sender_phone = 'Sender phone is required';
-    } else if (!/^\+?[1-9]\d{9,14}$/.test(formData.sender_phone.trim())) {
-      newErrors.sender_phone = 'Please enter a valid phone number';
+    if (!formData.pickup_contact_phone.trim()) {
+      newErrors.pickup_contact_phone = 'Pickup contact phone is required';
+    } else if (!/^\+?[1-9]\d{9,14}$/.test(formData.pickup_contact_phone.trim())) {
+      newErrors.pickup_contact_phone = 'Please enter a valid phone number';
     }
 
-    if (!formData.receiver_name.trim()) {
-      newErrors.receiver_name = 'Receiver name is required';
+    if (!formData.dropoff_contact_name.trim()) {
+      newErrors.dropoff_contact_name = 'Dropoff contact name is required';
     }
 
-    if (!formData.receiver_phone.trim()) {
-      newErrors.receiver_phone = 'Receiver phone is required';
-    } else if (!/^\+?[1-9]\d{9,14}$/.test(formData.receiver_phone.trim())) {
-      newErrors.receiver_phone = 'Please enter a valid phone number';
+    if (!formData.dropoff_contact_phone.trim()) {
+      newErrors.dropoff_contact_phone = 'Dropoff contact phone is required';
+    } else if (!/^\+?[1-9]\d{9,14}$/.test(formData.dropoff_contact_phone.trim())) {
+      newErrors.dropoff_contact_phone = 'Please enter a valid phone number';
     }
 
     if (formData.weight !== undefined) {
@@ -166,10 +166,10 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
         item_description: formData.item_description.trim(),
         weight: formData.weight || null,
         dimensions: formData.dimensions?.trim() || null,
-        sender_name: formData.sender_name.trim(),
-        sender_phone: formData.sender_phone.trim(),
-        receiver_name: formData.receiver_name.trim(),
-        receiver_phone: formData.receiver_phone.trim(),
+        pickup_contact_name: formData.pickup_contact_name.trim(),
+        pickup_contact_phone: formData.pickup_contact_phone.trim(),
+        dropoff_contact_name: formData.dropoff_contact_name.trim(),
+        dropoff_contact_phone: formData.dropoff_contact_phone.trim(),
         pickup_coordinates: formData.pickup_coordinates || null,
         dropoff_coordinates: formData.dropoff_coordinates || null,
         status: 'pending',
@@ -303,16 +303,16 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
               <form onSubmit={handleSubmit}>
                 <VStack spacing={6}>
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
-                    <FormControl isRequired isInvalid={!!errors.sender_name}>
+                    <FormControl isRequired isInvalid={!!errors.pickup_contact_name}>
                       <FormLabel color="gray.200">
                         <Icon as={FaUser} mr={2} />
-                        Sender Name
+                        Pickup Contact Name
                       </FormLabel>
                       <Input
-                        name="sender_name"
-                        value={formData.sender_name}
+                        name="pickup_contact_name"
+                        value={formData.pickup_contact_name}
                         onChange={handleChange}
-                        placeholder="Enter sender's name"
+                        placeholder="Enter pickup contact name"
                         color="white"
                         _placeholder={{ color: 'gray.400' }}
                         bg="rgba(26, 26, 46, 0.6)"
@@ -325,19 +325,19 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
                           boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
                         }}
                       />
-                      <FormErrorMessage>{errors.sender_name}</FormErrorMessage>
+                      <FormErrorMessage>{errors.pickup_contact_name}</FormErrorMessage>
                     </FormControl>
 
-                    <FormControl isRequired isInvalid={!!errors.sender_phone}>
+                    <FormControl isRequired isInvalid={!!errors.pickup_contact_phone}>
                       <FormLabel color="gray.200">
                         <Icon as={FaPhone} mr={2} />
-                        Sender Phone
+                        Pickup Contact Phone
                       </FormLabel>
                       <Input
-                        name="sender_phone"
-                        value={formData.sender_phone}
+                        name="pickup_contact_phone"
+                        value={formData.pickup_contact_phone}
                         onChange={handleChange}
-                        placeholder="Enter sender's phone number"
+                        placeholder="Enter pickup contact phone"
                         color="white"
                         _placeholder={{ color: 'gray.400' }}
                         bg="rgba(26, 26, 46, 0.6)"
@@ -350,21 +350,21 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
                           boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
                         }}
                       />
-                      <FormErrorMessage>{errors.sender_phone}</FormErrorMessage>
+                      <FormErrorMessage>{errors.pickup_contact_phone}</FormErrorMessage>
                     </FormControl>
                   </SimpleGrid>
 
                   <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
-                    <FormControl isRequired isInvalid={!!errors.receiver_name}>
+                    <FormControl isRequired isInvalid={!!errors.dropoff_contact_name}>
                       <FormLabel color="gray.200">
                         <Icon as={FaUser} mr={2} />
-                        Receiver Name
+                        Dropoff Contact Name
                       </FormLabel>
                       <Input
-                        name="receiver_name"
-                        value={formData.receiver_name}
+                        name="dropoff_contact_name"
+                        value={formData.dropoff_contact_name}
                         onChange={handleChange}
-                        placeholder="Enter receiver's name"
+                        placeholder="Enter dropoff contact name"
                         color="white"
                         _placeholder={{ color: 'gray.400' }}
                         bg="rgba(26, 26, 46, 0.6)"
@@ -377,19 +377,19 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
                           boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
                         }}
                       />
-                      <FormErrorMessage>{errors.receiver_name}</FormErrorMessage>
+                      <FormErrorMessage>{errors.dropoff_contact_name}</FormErrorMessage>
                     </FormControl>
 
-                    <FormControl isRequired isInvalid={!!errors.receiver_phone}>
+                    <FormControl isRequired isInvalid={!!errors.dropoff_contact_phone}>
                       <FormLabel color="gray.200">
                         <Icon as={FaPhone} mr={2} />
-                        Receiver Phone
+                        Dropoff Contact Phone
                       </FormLabel>
                       <Input
-                        name="receiver_phone"
-                        value={formData.receiver_phone}
+                        name="dropoff_contact_phone"
+                        value={formData.dropoff_contact_phone}
                         onChange={handleChange}
-                        placeholder="Enter receiver's phone number"
+                        placeholder="Enter dropoff contact phone"
                         color="white"
                         _placeholder={{ color: 'gray.400' }}
                         bg="rgba(26, 26, 46, 0.6)"
@@ -402,7 +402,7 @@ const DeliveryForm = ({ deliveryType }: DeliveryFormProps) => {
                           boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
                         }}
                       />
-                      <FormErrorMessage>{errors.receiver_phone}</FormErrorMessage>
+                      <FormErrorMessage>{errors.dropoff_contact_phone}</FormErrorMessage>
                     </FormControl>
                   </SimpleGrid>
 
