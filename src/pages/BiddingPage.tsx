@@ -206,23 +206,69 @@ const BiddingPage = () => {
 
   const acceptBid = async (bidId: string) => {
     try {
+      console.log('Accepting bid:', bidId, 'for request:', requestId);
+
+      // First verify ownership of the delivery request
+      const { data: requestData, error: requestError } = await supabase
+        .from('delivery_requests')
+        .select('user_id, status')
+        .eq('id', requestId)
+        .single();
+
+      if (requestError) {
+        console.error('Error verifying request ownership:', requestError);
+        throw new Error('Could not verify delivery request ownership');
+      }
+
+      if (!requestData) {
+        throw new Error('Delivery request not found');
+      }
+
+      if (requestData.user_id !== user?.id) {
+        throw new Error('You do not have permission to accept bids for this delivery request');
+      }
+
+      if (requestData.status !== 'pending') {
+        throw new Error('This delivery request is no longer pending');
+      }
+
       // Start a transaction to update both the bid and delivery request
       const { data: bid, error: bidError } = await supabase
         .from('bids')
         .update({ status: 'accepted' })
         .eq('id', bidId)
+        .eq('delivery_request_id', requestId) // Additional safety check
         .select()
         .single();
 
-      if (bidError) throw bidError;
+      if (bidError) {
+        console.error('Error updating bid status:', bidError);
+        throw new Error('Failed to accept bid');
+      }
+
+      console.log('Successfully updated bid status');
 
       // Update delivery request status
-      const { error: requestError } = await supabase
+      const { error: requestUpdateError } = await supabase
         .from('delivery_requests')
-        .update({ status: 'accepted' })
-        .eq('id', requestId);
+        .update({ 
+          status: 'accepted',
+          payment_status: 'pending' // Initialize payment status
+        })
+        .eq('id', requestId)
+        .eq('user_id', user?.id); // Additional safety check
 
-      if (requestError) throw requestError;
+      if (requestUpdateError) {
+        console.error('Error updating delivery request:', requestUpdateError);
+        // Try to revert the bid status
+        await supabase
+          .from('bids')
+          .update({ status: 'pending' })
+          .eq('id', bidId);
+        throw new Error('Failed to update delivery request status');
+      }
+
+      console.log('Successfully updated delivery request status');
 
       // Reject all other bids for this delivery request
       const { error: rejectError } = await supabase
@@ -231,7 +277,13 @@ const BiddingPage = () => {
         .eq('delivery_request_id', requestId)
         .neq('id', bidId);
 
-      if (rejectError) throw rejectError;
+      if (rejectError) {
+        console.error('Error rejecting other bids:', rejectError);
+        // Don't throw here as the main operation succeeded
+        console.warn('Failed to reject other bids, but main operation succeeded');
+      } else {
+        console.log('Successfully rejected other bids');
+      }
 
       toast({
         title: 'Success',
@@ -243,9 +295,10 @@ const BiddingPage = () => {
       // Navigate to the order summary page
       navigate(`/order-summary/${requestId}/${bidId}`);
     } catch (error: any) {
+      console.error('Full error details:', error);
       toast({
         title: 'Error',
-        description: 'Failed to accept bid',
+        description: error.message || 'Failed to accept bid',
         status: 'error',
         duration: 5000,
       });
