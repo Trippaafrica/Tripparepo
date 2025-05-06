@@ -22,8 +22,8 @@ import { FaUser, FaPhone, FaBox } from 'react-icons/fa';
 
 interface FormData {
   delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
-  pickup_location: string;
-  dropoff_location: string;
+  pickup_address: string;
+  dropoff_address: string;
   item_description: string;
   package_weight: number | null;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
@@ -38,8 +38,8 @@ interface FormData {
 interface FormErrors {
   pickup_contact_phone?: string;
   dropoff_contact_phone?: string;
-  pickup_location?: string;
-  dropoff_location?: string;
+  pickup_address?: string;
+  dropoff_address?: string;
   item_description?: string;
 }
 
@@ -52,8 +52,8 @@ const DeliveryRequestForm = () => {
 
   const [formData, setFormData] = useState<FormData>({
     delivery_type: 'bike',
-    pickup_location: '',
-    dropoff_location: '',
+    pickup_address: '',
+    dropoff_address: '',
     item_description: '',
     package_weight: null,
     status: 'pending',
@@ -75,11 +75,11 @@ const DeliveryRequestForm = () => {
     if (!/^\+?[1-9]\d{9,14}$/.test(formData.dropoff_contact_phone.trim())) {
       newErrors.dropoff_contact_phone = 'Please enter a valid phone number';
     }
-    if (!formData.pickup_location.trim()) {
-      newErrors.pickup_location = 'Pickup location is required';
+    if (!formData.pickup_address.trim()) {
+      newErrors.pickup_address = 'Pickup address is required';
     }
-    if (!formData.dropoff_location.trim()) {
-      newErrors.dropoff_location = 'Dropoff location is required';
+    if (!formData.dropoff_address.trim()) {
+      newErrors.dropoff_address = 'Dropoff address is required';
     }
     if (!formData.item_description.trim()) {
       newErrors.item_description = 'Item description is required';
@@ -234,17 +234,17 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
-          <FormControl isRequired isInvalid={!!errors.pickup_location}>
-            <FormLabel>Pickup Location</FormLabel>
+          <FormControl isRequired isInvalid={!!errors.pickup_address}>
+            <FormLabel>Pickup Address</FormLabel>
             <Input
-              name="pickup_location"
-              value={formData.pickup_location}
+              name="pickup_address"
+              value={formData.pickup_address}
               onChange={handleChange}
-              placeholder="Enter pickup address/location"
+              placeholder="Enter pickup address"
             />
-            {errors.pickup_location && (
+            {errors.pickup_address && (
               <Text color="red.500" fontSize="sm" mt={1}>
-                {errors.pickup_location}
+                {errors.pickup_address}
               </Text>
             )}
           </FormControl>
@@ -282,17 +282,17 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
-          <FormControl isRequired isInvalid={!!errors.dropoff_location}>
-            <FormLabel>Dropoff Location</FormLabel>
+          <FormControl isRequired isInvalid={!!errors.dropoff_address}>
+            <FormLabel>Dropoff Address</FormLabel>
             <Input
-              name="dropoff_location"
-              value={formData.dropoff_location}
+              name="dropoff_address"
+              value={formData.dropoff_address}
               onChange={handleChange}
-              placeholder="Enter dropoff address/location"
+              placeholder="Enter dropoff address"
             />
-            {errors.dropoff_location && (
+            {errors.dropoff_address && (
               <Text color="red.500" fontSize="sm" mt={1}>
-                {errors.dropoff_location}
+                {errors.dropoff_address}
               </Text>
             )}
           </FormControl>
