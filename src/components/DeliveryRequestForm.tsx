@@ -18,12 +18,13 @@ import {
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaPhone } from 'react-icons/fa';
+import { FaUser, FaPhone, FaBox } from 'react-icons/fa';
 
 interface FormData {
   delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
-  pickup_address: string;
-  dropoff_address: string;
+  pickup_location: string;
+  dropoff_location: string;
+  item_description: string;
   package_weight: number | null;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
   pickup_coordinates: { lat: number; lng: number } | null;
@@ -37,6 +38,9 @@ interface FormData {
 interface FormErrors {
   pickup_contact_phone?: string;
   dropoff_contact_phone?: string;
+  pickup_location?: string;
+  dropoff_location?: string;
+  item_description?: string;
 }
 
 const DeliveryRequestForm = () => {
@@ -48,8 +52,9 @@ const DeliveryRequestForm = () => {
 
   const [formData, setFormData] = useState<FormData>({
     delivery_type: 'bike',
-    pickup_address: '',
-    dropoff_address: '',
+    pickup_location: '',
+    dropoff_location: '',
+    item_description: '',
     package_weight: null,
     status: 'pending',
     pickup_coordinates: null,
@@ -67,18 +72,24 @@ const DeliveryRequestForm = () => {
     if (!/^\+?[1-9]\d{9,14}$/.test(formData.pickup_contact_phone.trim())) {
       newErrors.pickup_contact_phone = 'Please enter a valid phone number';
     }
-    
     if (!/^\+?[1-9]\d{9,14}$/.test(formData.dropoff_contact_phone.trim())) {
       newErrors.dropoff_contact_phone = 'Please enter a valid phone number';
     }
-
+    if (!formData.pickup_location.trim()) {
+      newErrors.pickup_location = 'Pickup location is required';
+    }
+    if (!formData.dropoff_location.trim()) {
+      newErrors.dropoff_location = 'Dropoff location is required';
+    }
+    if (!formData.item_description.trim()) {
+      newErrors.item_description = 'Item description is required';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       toast({
         title: 'Validation Error',
@@ -88,9 +99,7 @@ const DeliveryRequestForm = () => {
       });
       return;
     }
-    
     setIsLoading(true);
-
     try {
       if (!user) {
         toast({
@@ -101,7 +110,6 @@ const DeliveryRequestForm = () => {
         });
         return;
       }
-
       const { data, error } = await supabase
         .from('delivery_requests')
         .insert([
@@ -112,7 +120,6 @@ const DeliveryRequestForm = () => {
         ])
         .select()
         .single();
-
       if (error) {
         console.error('Error:', error);
         toast({
@@ -123,15 +130,12 @@ const DeliveryRequestForm = () => {
         });
         return;
       }
-
       toast({
         title: 'Success',
         description: 'Delivery request created successfully',
         status: 'success',
         duration: 5000,
       });
-
-      // Navigate to the bidding page for this request
       navigate(`/bidding/${data.id}`);
     } catch (error) {
       console.error('Error:', error);
@@ -149,7 +153,6 @@ const DeliveryRequestForm = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -178,6 +181,24 @@ const DeliveryRequestForm = () => {
               <option value="van">Van</option>
               <option value="fuel">Fuel</option>
             </Select>
+          </FormControl>
+
+          <FormControl isRequired isInvalid={!!errors.item_description}>
+            <FormLabel>
+              <Icon as={FaBox} mr={2} />
+              Item Description
+            </FormLabel>
+            <Input
+              name="item_description"
+              value={formData.item_description}
+              onChange={handleChange}
+              placeholder="Describe the item/package"
+            />
+            {errors.item_description && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {errors.item_description}
+              </Text>
+            )}
           </FormControl>
 
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
@@ -213,6 +234,21 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
+          <FormControl isRequired isInvalid={!!errors.pickup_location}>
+            <FormLabel>Pickup Location</FormLabel>
+            <Input
+              name="pickup_location"
+              value={formData.pickup_location}
+              onChange={handleChange}
+              placeholder="Enter pickup address/location"
+            />
+            {errors.pickup_location && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {errors.pickup_location}
+              </Text>
+            )}
+          </FormControl>
+
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
             <FormControl isRequired>
               <FormLabel>
@@ -246,24 +282,19 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
-          <FormControl isRequired>
-            <FormLabel>Pickup Address</FormLabel>
+          <FormControl isRequired isInvalid={!!errors.dropoff_location}>
+            <FormLabel>Dropoff Location</FormLabel>
             <Input
-              name="pickup_address"
-              value={formData.pickup_address}
+              name="dropoff_location"
+              value={formData.dropoff_location}
               onChange={handleChange}
-              placeholder="Enter pickup address"
+              placeholder="Enter dropoff address/location"
             />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Dropoff Address</FormLabel>
-            <Input
-              name="dropoff_address"
-              value={formData.dropoff_address}
-              onChange={handleChange}
-              placeholder="Enter dropoff address"
-            />
+            {errors.dropoff_location && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {errors.dropoff_location}
+              </Text>
+            )}
           </FormControl>
 
           <FormControl>
