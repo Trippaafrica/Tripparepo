@@ -27,8 +27,8 @@ import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar } from 'rea
 interface DeliveryRequest {
   id: string;
   delivery_type: string;
-  pickup_location: string;
-  dropoff_location: string;
+  pickup_address: string;
+  dropoff_address: string;
   item_description: string;
   weight?: number;
   dimensions?: string;
@@ -339,14 +339,14 @@ const BiddingPage = () => {
                           <Icon as={FaMapMarkerAlt} color="green.400" />
                           <Text color="gray.200" fontWeight="bold">Pickup:</Text>
                         </HStack>
-                        <Text color="white" ml={6}>{request.pickup_location}</Text>
+                        <Text color="white" ml={6}>{request.pickup_address}</Text>
                       </Box>
                       <Box flex={1}>
                         <HStack>
                           <Icon as={FaMapMarkerAlt} color="red.400" />
                           <Text color="gray.200" fontWeight="bold">Dropoff:</Text>
                         </HStack>
-                        <Text color="white" ml={6}>{request.dropoff_location}</Text>
+                        <Text color="white" ml={6}>{request.dropoff_address}</Text>
                       </Box>
                     </Stack>
                     <Text color="gray.200">
