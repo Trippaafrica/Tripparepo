@@ -207,12 +207,12 @@ const Home = () => {
                 }}
               />
               <Image
-                src="/images/cyclist.svg"
-                alt="Delivery Cyclist"
+                src="/images/banner. SVG.svg"
+                alt="Delivery Banner"
                 position="absolute"
                 objectFit="contain"
-                height="70%"
-                width="70%"
+                height="100%"
+                width="100%"
                 style={{
                   filter: 'drop-shadow(0 0 20px rgba(57, 255, 20, 0.2))'
                 }}
