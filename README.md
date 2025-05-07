@@ -1,80 +1,75 @@
-# Trippa Delivery App
+# Trippa Web Delivery Platform
 
-A modern delivery application that allows users to book different types of deliveries (bike, truck, van, and fuel) with a bidding system.
+Trippa is a modern web platform for booking, tracking, and managing delivery services. Built with React, Chakra UI, and Supabase, it offers a seamless experience for customers and delivery partners.
 
 ## Features
+- User authentication (sign up, login, email verification)
+- Book various delivery types (bike, truck, van, fuel)
+- Real-time bidding for delivery requests
+- Order summary and secure payment integration (Paystack)
+- Track orders and view delivery status
+- Responsive, modern UI with Chakra UI
 
-- Multiple delivery types (Bike, Truck, Van, Fuel)
-- Bidding system for delivery requests
-- Real-time updates using Supabase
-- Modern UI with Chakra UI
-- Responsive design
+## Tech Stack
+- **Frontend:** React, TypeScript, Chakra UI
+- **Backend:** Supabase (Database & Auth)
+- **Payments:** Paystack
 
-## Prerequisites
+## Getting Started
 
-- Node.js (v14 or higher)
+### Prerequisites
+- Node.js (v16 or higher recommended)
 - npm or yarn
-- Supabase account
 
-## Setup
-
-1. Clone the repository
-2. Install dependencies:
+### Installation
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Trippaafrica/Tripparepo.git
+   cd Tripparepo
+   ```
+2. **Install dependencies:**
    ```bash
    npm install
+   # or
+   yarn install
    ```
+3. **Set up environment variables:**
+   - Copy `.env.example` to `.env` and fill in your Supabase credentials and Paystack public key.
 
-3. Create a `.env` file in the root directory and add your Supabase credentials:
-   ```
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-4. Set up your Supabase database with the following tables:
-
-   ### delivery_requests
-   - id (uuid, primary key)
-   - user_id (uuid, foreign key to auth.users)
-   - delivery_type (text)
-   - pickup_location (text)
-   - dropoff_location (text)
-   - item_description (text)
-   - weight (numeric, optional)
-   - dimensions (text, optional)
-   - status (text)
-   - created_at (timestamp with time zone)
-
-   ### bids
-   - id (uuid, primary key)
-   - delivery_request_id (uuid, foreign key to delivery_requests)
-   - rider_id (uuid, foreign key to auth.users)
-   - amount (numeric)
-   - estimated_time (text)
-   - status (text)
-   - created_at (timestamp with time zone)
-
-## Running the Application
-
-1. Start the development server:
+4. **Start the development server:**
    ```bash
    npm run dev
+   # or
+   yarn dev
    ```
+   The app will be available at `http://localhost:5173` (or the port shown in your terminal).
 
-2. Open your browser and navigate to `http://localhost:5173`
-
-## Building for Production
-
-```bash
-npm run build
+## Project Structure
+```
+src/
+  components/      # Reusable UI components
+  contexts/        # React context providers (e.g., Auth)
+  pages/           # Page components (route views)
+  services/        # API and external service logic
+  theme/           # Chakra UI theme customization
+  App.tsx          # Main app component
+  routes.tsx       # App routes
+public/
+  images/          # Static images and banners
+  logo.svg         # Favicon/logo
 ```
 
-The built files will be in the `dist` directory.
+## Deployment
+- Build for production:
+  ```bash
+  npm run build
+  # or
+  yarn build
+  ```
+- Deploy the `dist/` folder to your preferred static hosting (Vercel, Netlify, etc.)
 
-## Technologies Used
+## License
+MIT
 
-- React
-- TypeScript
-- Vite
-- Chakra UI
-- Supabase
-- React Router
+---
+For questions or support, please open an issue or contact the Trippa team.
