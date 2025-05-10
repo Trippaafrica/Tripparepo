@@ -1,0 +1,133 @@
+import {
+  Box,
+  VStack,
+  Text,
+  Card,
+  CardBody,
+  HStack,
+  Badge,
+  Progress,
+  useColorModeValue,
+} from '@chakra-ui/react';
+import { FaBox, FaCheckCircle, FaTruck, FaMapMarkerAlt } from 'react-icons/fa';
+
+interface OrderTrackingProps {
+  order: {
+    id: string;
+    status: string;
+    pickup_code: string;
+    dropoff_code: string;
+    pickup_location: string;
+    dropoff_location: string;
+    created_at: string;
+  };
+}
+
+const OrderTracking = ({ order }: OrderTrackingProps) => {
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'yellow';
+      case 'in_progress':
+        return 'blue';
+      case 'completed':
+        return 'green';
+      case 'cancelled':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
+  const getProgressValue = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 25;
+      case 'in_progress':
+        return 75;
+      case 'completed':
+        return 100;
+      default:
+        return 0;
+    }
+  };
+
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  return (
+    <Card width="100%" bg={bgColor} border="1px solid" borderColor={borderColor}>
+      <CardBody>
+        <VStack spacing={6} align="stretch">
+          <HStack justify="space-between">
+            <Text fontSize="lg" fontWeight="bold">Order #{order.id}</Text>
+            <Badge colorScheme={getStatusColor(order.status)} fontSize="md" px={3} py={1}>
+              {order.status.replace('_', ' ').toUpperCase()}
+            </Badge>
+          </HStack>
+
+          <Box>
+            <Progress
+              value={getProgressValue(order.status)}
+              colorScheme={getStatusColor(order.status)}
+              size="sm"
+              borderRadius="full"
+            />
+          </Box>
+
+          <VStack spacing={4} align="stretch">
+            <Box>
+              <HStack spacing={2} mb={2}>
+                <FaMapMarkerAlt color="green" />
+                <Text fontWeight="bold">Pickup Details</Text>
+              </HStack>
+              <Text ml={6}>{order.pickup_location}</Text>
+              <HStack ml={6} mt={2} spacing={2}>
+                <Text color="gray.500">Pickup Code:</Text>
+                <Text fontWeight="bold" color="green.500">{order.pickup_code}</Text>
+              </HStack>
+            </Box>
+
+            <Box>
+              <HStack spacing={2} mb={2}>
+                <FaMapMarkerAlt color="red" />
+                <Text fontWeight="bold">Dropoff Details</Text>
+              </HStack>
+              <Text ml={6}>{order.dropoff_location}</Text>
+              <HStack ml={6} mt={2} spacing={2}>
+                <Text color="gray.500">Dropoff Code:</Text>
+                <Text fontWeight="bold" color="red.500">{order.dropoff_code}</Text>
+              </HStack>
+            </Box>
+
+            <Box>
+              <HStack spacing={2} mb={2}>
+                <FaTruck />
+                <Text fontWeight="bold">Order Timeline</Text>
+              </HStack>
+              <VStack align="start" ml={6} spacing={2}>
+                <HStack>
+                  <FaCheckCircle color={order.status !== 'cancelled' ? 'green' : 'gray'} />
+                  <Text>Order Placed</Text>
+                  <Text color="gray.500" fontSize="sm">
+                    {new Date(order.created_at).toLocaleString()}
+                  </Text>
+                </HStack>
+                <HStack>
+                  <FaCheckCircle color={['in_progress', 'completed'].includes(order.status) ? 'green' : 'gray'} />
+                  <Text>Order Accepted</Text>
+                </HStack>
+                <HStack>
+                  <FaCheckCircle color={order.status === 'completed' ? 'green' : 'gray'} />
+                  <Text>Delivery Completed</Text>
+                </HStack>
+              </VStack>
+            </Box>
+          </VStack>
+        </VStack>
+      </CardBody>
+    </Card>
+  );
+};
+
+export default OrderTracking; 

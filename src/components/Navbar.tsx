@@ -13,7 +13,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { FaTruck, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { FaTruck, FaUser, FaSignOutAlt, FaClipboardList } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
@@ -68,6 +68,16 @@ const Navbar = () => {
                   {user.email}
                 </MenuButton>
                 <MenuList bg={bgColor} borderColor={borderColor}>
+                  <MenuItem
+                    as={RouterLink}
+                    to="/orders"
+                    icon={<Icon as={FaClipboardList} />}
+                    _hover={{
+                      bg: 'rgba(57, 255, 20, 0.1)',
+                    }}
+                  >
+                    My Orders
+                  </MenuItem>
                   <MenuItem
                     icon={<Icon as={FaSignOutAlt} />}
                     onClick={handleSignOut}
