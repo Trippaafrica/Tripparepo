@@ -31,14 +31,14 @@ const loadGoogleMapsScript = (callback: () => void) => {
   // Create script element
   const script = document.createElement('script');
   script.id = 'google-maps-script';
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyB-XYFou8gZPNLQYU-TA_HOsQfGLcmilX8'}&libraries=places`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
   script.async = true;
   script.defer = true;
   
   // Add load handler
   script.addEventListener('load', callback);
-  script.addEventListener('error', () => {
-    console.error('Failed to load Google Maps API');
+  script.addEventListener('error', (e) => {
+    console.error('Failed to load Google Maps API:', e);
   });
   
   // Add the script to the page
@@ -79,12 +79,14 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     if (!inputRef.current || !(window as any).google) return;
     
     try {
-      // Create autocomplete instance
-      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-        fields: ['formatted_address', 'geometry'],
-        types: ['geocode'],
-        componentRestrictions: { country: 'ng' }, // Restrict to Nigeria
-      });
+      // Create autocomplete instance with type casting to avoid TypeScript errors
+      autocompleteRef.current = new google.maps.places.Autocomplete(
+        inputRef.current, 
+        {
+          fields: ['formatted_address', 'geometry'],
+          types: ['geocode']
+        } as any
+      );
 
       // Add place_changed event listener
       autocompleteRef.current.addListener('place_changed', () => {
