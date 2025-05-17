@@ -54,6 +54,17 @@ const PaymentSuccess = () => {
           status: 'success',
           duration: 5000,
         });
+
+        // Check if there's a callback URL stored in localStorage
+        const callbackUrl = localStorage.getItem('paystack_callback_url');
+        if (callbackUrl) {
+          // Clear the stored URL
+          localStorage.removeItem('paystack_callback_url');
+          // Redirect to the callback URL after a short delay
+          setTimeout(() => {
+            window.location.href = callbackUrl;
+          }, 3000);
+        }
       } catch (error: any) {
         console.error('Error updating payment status:', error);
         toast({
@@ -66,7 +77,7 @@ const PaymentSuccess = () => {
     };
 
     updatePaymentStatus();
-  }, [reference, requestId]);
+  }, [reference, requestId, toast, navigate]);
 
   const handleGoHome = () => {
     navigate('/');
@@ -106,6 +117,10 @@ const PaymentSuccess = () => {
                     Reference: {reference}
                   </Text>
                 )}
+              </Text>
+              
+              <Text color="gray.300" fontSize="sm" textAlign="center">
+                You will be redirected to the orders page shortly...
               </Text>
 
               <HStack spacing={4} pt={4}>

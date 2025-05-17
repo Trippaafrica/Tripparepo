@@ -119,6 +119,8 @@ const OrderSummary = () => {
   const initializePayment = usePaystackPayment(config);
 
   const handlePayment = () => {
+    // Save callback URL to localStorage to redirect after successful payment verification
+    localStorage.setItem('paystack_callback_url', 'https://newtrippaf.netlify.app/orders');
     initializePayment(handleSuccess, handleClose);
   };
 
