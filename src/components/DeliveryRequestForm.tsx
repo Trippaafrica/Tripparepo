@@ -19,27 +19,26 @@ import {
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaPhone, FaBox, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUser, FaPhone, FaBox, FaMapMarkerAlt, FaWeight, FaRuler, FaTruck, FaInfoCircle } from 'react-icons/fa';
+import AddressAutocomplete from './AddressAutocomplete';
 
 interface FormData {
-  delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
-  pickup_address: string;
-  dropoff_address: string;
+  delivery_type: string;
   item_description: string;
-  package_weight: number | null;
-  status: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  pickup_contact_name: string;
-  pickup_contact_phone: string;
-  dropoff_contact_name: string;
-  dropoff_contact_phone: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  senderName: string;
+  senderPhone: string;
+  recipientName: string;
+  recipientPhone: string;
 }
 
 interface FormErrors {
-  pickup_contact_phone?: string;
-  dropoff_contact_phone?: string;
-  pickup_address?: string;
-  dropoff_address?: string;
+  pickupAddress?: string;
+  dropoffAddress?: string;
   item_description?: string;
+  senderPhone?: string;
+  recipientPhone?: string;
 }
 
 const DeliveryRequestForm = () => {
@@ -47,131 +46,117 @@ const DeliveryRequestForm = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
-
+  
   const [formData, setFormData] = useState<FormData>({
     delivery_type: 'bike',
-    pickup_address: '',
-    dropoff_address: '',
     item_description: '',
-    package_weight: null,
-    status: 'pending',
-    pickup_contact_name: '',
-    pickup_contact_phone: '',
-    dropoff_contact_name: '',
-    dropoff_contact_phone: '',
+    pickupAddress: '',
+    dropoffAddress: '',
+    senderName: '',
+    senderPhone: '',
+    recipientName: '',
+    recipientPhone: '',
   });
+  
+  const [errors, setErrors] = useState<FormErrors>({});
 
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const newErrors: FormErrors = {};
+
+    if (!formData.pickupAddress.trim()) {
+      newErrors.pickupAddress = 'Pickup address is required';
+    }
     
-    // Validate phone numbers
-    if (!/^\+?[1-9]\d{9,14}$/.test(formData.pickup_contact_phone.trim())) {
-      newErrors.pickup_contact_phone = 'Please enter a valid phone number';
+    if (!formData.dropoffAddress.trim()) {
+      newErrors.dropoffAddress = 'Dropoff address is required';
     }
-    if (!/^\+?[1-9]\d{9,14}$/.test(formData.dropoff_contact_phone.trim())) {
-      newErrors.dropoff_contact_phone = 'Please enter a valid phone number';
-    }
-    if (!formData.pickup_address.trim()) {
-      newErrors.pickup_address = 'Pickup address is required';
-    }
-    if (!formData.dropoff_address.trim()) {
-      newErrors.dropoff_address = 'Dropoff address is required';
-    }
+    
     if (!formData.item_description.trim()) {
       newErrors.item_description = 'Item description is required';
     }
+    
+    if (!/^\+?[1-9]\d{9,14}$/.test(formData.senderPhone.trim())) {
+      newErrors.senderPhone = 'Please enter a valid phone number';
+    }
+    
+    if (!/^\+?[1-9]\d{9,14}$/.test(formData.recipientPhone.trim())) {
+      newErrors.recipientPhone = 'Please enter a valid phone number';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please check the form for errors',
-        status: 'error',
-        duration: 5000,
-      });
-      return;
-    }
+    if (!validateForm()) return;
+
     setIsLoading(true);
+    
     try {
-      if (!user) {
-        toast({
-          title: 'Error',
-          description: 'You must be logged in to create a delivery request',
-          status: 'error',
-          duration: 5000,
-        });
-        return;
-      }
-      
-      // Create object with just the fields needed for the database
-      const deliveryRequestData = {
-        user_id: user.id,
-        delivery_type: formData.delivery_type,
-        pickup_address: formData.pickup_address,
-        dropoff_address: formData.dropoff_address,
+      const requestData = {
+        user_id: user?.id,
+        pickup_address: formData.pickupAddress,
+        dropoff_address: formData.dropoffAddress,
         item_description: formData.item_description,
-        package_weight: formData.package_weight,
-        status: formData.status,
-        pickup_contact_name: formData.pickup_contact_name,
-        pickup_contact_phone: formData.pickup_contact_phone,
-        dropoff_contact_name: formData.dropoff_contact_name,
-        dropoff_contact_phone: formData.dropoff_contact_phone,
+        delivery_type: formData.delivery_type,
+        pickup_contact_name: formData.senderName,
+        pickup_contact_phone: formData.senderPhone,
+        dropoff_contact_name: formData.recipientName,
+        dropoff_contact_phone: formData.recipientPhone,
+        status: 'pending',
       };
-      
+
       const { data, error } = await supabase
         .from('delivery_requests')
-        .insert([deliveryRequestData])
-        .select()
-        .single();
-        
+        .insert([requestData])
+        .select();
+
       if (error) {
-        console.error('Error:', error);
         toast({
           title: 'Error',
-          description: 'Failed to create delivery request',
+          description: error.message,
           status: 'error',
           duration: 5000,
+          isClosable: true,
         });
+        console.error('Error creating delivery request:', error);
         return;
       }
-      toast({
-        title: 'Success',
-        description: 'Delivery request created successfully',
-        status: 'success',
-        duration: 5000,
-      });
-      navigate(`/bidding/${data.id}`);
-    } catch (error) {
-      console.error('Error:', error);
+
+      const newRequestId = data?.[0]?.id;
+      
+      if (newRequestId) {
+        toast({
+          title: 'Success',
+          description: 'Your delivery request has been created',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
+        navigate(`/request/${newRequestId}`);
+      }
+    } catch (err) {
+      console.error('Error in form submission:', err);
       toast({
         title: 'Error',
         description: 'An unexpected error occurred',
         status: 'error',
         duration: 5000,
+        isClosable: true,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    // Clear error when field is edited
+    if (errors[name as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
-  };
-
-  const handleWeightChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      package_weight: value ? parseFloat(value) : null,
-    }));
   };
 
   return (
@@ -183,7 +168,7 @@ const DeliveryRequestForm = () => {
             <Select
               name="delivery_type"
               value={formData.delivery_type}
-              onChange={handleChange}
+              onChange={handleInputChange}
             >
               <option value="bike">Bike</option>
               <option value="truck">Truck</option>
@@ -200,7 +185,7 @@ const DeliveryRequestForm = () => {
             <Input
               name="item_description"
               value={formData.item_description}
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Describe the item/package"
             />
             {errors.item_description && (
@@ -214,116 +199,79 @@ const DeliveryRequestForm = () => {
             <FormControl isRequired>
               <FormLabel>
                 <Icon as={FaUser} mr={2} />
-                Pickup Contact Name
+                Sender Name
               </FormLabel>
               <Input
-                name="pickup_contact_name"
-                value={formData.pickup_contact_name}
-                onChange={handleChange}
-                placeholder="Enter pickup contact name"
+                name="senderName"
+                value={formData.senderName}
+                onChange={handleInputChange}
+                placeholder="Enter sender's name"
               />
             </FormControl>
 
-            <FormControl isRequired isInvalid={!!errors.pickup_contact_phone}>
+            <FormControl isRequired>
               <FormLabel>
                 <Icon as={FaPhone} mr={2} />
-                Pickup Contact Phone
+                Sender Phone
               </FormLabel>
               <Input
-                name="pickup_contact_phone"
-                value={formData.pickup_contact_phone}
-                onChange={handleChange}
-                placeholder="Enter pickup contact phone"
+                name="senderPhone"
+                value={formData.senderPhone}
+                onChange={handleInputChange}
+                placeholder="Enter sender's phone number"
               />
-              {errors.pickup_contact_phone && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  {errors.pickup_contact_phone}
-                </Text>
-              )}
             </FormControl>
           </SimpleGrid>
 
-          <FormControl isRequired isInvalid={!!errors.pickup_address}>
-            <FormLabel>
-              <Icon as={FaMapMarkerAlt} mr={2} />
-              Pickup Address
-            </FormLabel>
-            <Textarea
-              name="pickup_address"
-              value={formData.pickup_address}
-              onChange={handleChange}
-              placeholder="Enter full pickup address"
-              rows={3}
-            />
-            {errors.pickup_address && (
-              <Text color="red.500" fontSize="sm" mt={1}>
-                {errors.pickup_address}
-              </Text>
-            )}
-          </FormControl>
+          <AddressAutocomplete
+            label="Pickup Address"
+            name="pickupAddress"
+            value={formData.pickupAddress}
+            onChange={(value) => setFormData((prev) => ({ ...prev, pickupAddress: value }))}
+            placeholder="Enter pickup address"
+            isRequired
+            isInvalid={!!errors.pickupAddress}
+            errorMessage={errors.pickupAddress}
+          />
 
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
             <FormControl isRequired>
               <FormLabel>
                 <Icon as={FaUser} mr={2} />
-                Dropoff Contact Name
+                Recipient Name
               </FormLabel>
               <Input
-                name="dropoff_contact_name"
-                value={formData.dropoff_contact_name}
-                onChange={handleChange}
-                placeholder="Enter dropoff contact name"
+                name="recipientName"
+                value={formData.recipientName}
+                onChange={handleInputChange}
+                placeholder="Enter recipient's name"
               />
             </FormControl>
 
-            <FormControl isRequired isInvalid={!!errors.dropoff_contact_phone}>
+            <FormControl isRequired>
               <FormLabel>
                 <Icon as={FaPhone} mr={2} />
-                Dropoff Contact Phone
+                Recipient Phone
               </FormLabel>
               <Input
-                name="dropoff_contact_phone"
-                value={formData.dropoff_contact_phone}
-                onChange={handleChange}
-                placeholder="Enter dropoff contact phone"
+                name="recipientPhone"
+                value={formData.recipientPhone}
+                onChange={handleInputChange}
+                placeholder="Enter recipient's phone number"
               />
-              {errors.dropoff_contact_phone && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  {errors.dropoff_contact_phone}
-                </Text>
-              )}
             </FormControl>
           </SimpleGrid>
 
-          <FormControl isRequired isInvalid={!!errors.dropoff_address}>
-            <FormLabel>
-              <Icon as={FaMapMarkerAlt} mr={2} />
-              Dropoff Address
-            </FormLabel>
-            <Textarea
-              name="dropoff_address"
-              value={formData.dropoff_address}
-              onChange={handleChange}
-              placeholder="Enter full dropoff address"
-              rows={3}
-            />
-            {errors.dropoff_address && (
-              <Text color="red.500" fontSize="sm" mt={1}>
-                {errors.dropoff_address}
-              </Text>
-            )}
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Package Weight (kg)</FormLabel>
-            <NumberInput
-              value={formData.package_weight || ''}
-              onChange={handleWeightChange}
-              min={0}
-            >
-              <NumberInputField placeholder="Enter package weight in kg" />
-            </NumberInput>
-          </FormControl>
+          <AddressAutocomplete
+            label="Dropoff Address"
+            name="dropoffAddress"
+            value={formData.dropoffAddress}
+            onChange={(value) => setFormData((prev) => ({ ...prev, dropoffAddress: value }))}
+            placeholder="Enter dropoff address"
+            isRequired
+            isInvalid={!!errors.dropoffAddress}
+            errorMessage={errors.dropoffAddress}
+          />
 
           <Button
             type="submit"

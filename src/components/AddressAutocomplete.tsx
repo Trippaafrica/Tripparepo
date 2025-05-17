@@ -1,262 +1,163 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Input,
   InputGroup,
-  InputRightElement,
-  Spinner,
+  InputLeftElement,
+  Icon,
   Box,
-  List,
-  ListItem,
+  Spinner,
   Text,
-  useColorModeValue,
+  Stack,
   FormControl,
   FormLabel,
   FormErrorMessage,
 } from '@chakra-ui/react';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 
-// Google Maps API key
-const GOOGLE_API_KEY = 'AIzaSyDAPCO0RO432dTqJm0tH94o3g5s-kliK9o';
-
-interface Place {
-  description: string;
-  place_id: string;
-}
+// Load the Google Maps script
+const loadGoogleMapsScript = (callback: () => void) => {
+  const existingScript = document.getElementById('google-maps-script');
+  
+  // If script already exists, just use it
+  if (existingScript) {
+    if ((window as any).google?.maps?.places) {
+      callback();
+    } else {
+      existingScript.addEventListener('load', callback);
+    }
+    return;
+  }
+  
+  // Create script element
+  const script = document.createElement('script');
+  script.id = 'google-maps-script';
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'AIzaSyB-XYFou8gZPNLQYU-TA_HOsQfGLcmilX8'}&libraries=places`;
+  script.async = true;
+  script.defer = true;
+  
+  // Add load handler
+  script.addEventListener('load', callback);
+  script.addEventListener('error', () => {
+    console.error('Failed to load Google Maps API');
+  });
+  
+  // Add the script to the page
+  document.head.appendChild(script);
+};
 
 interface AddressAutocompleteProps {
-  label: string;
-  placeholder: string;
   value: string;
-  onChange: (value: string, coordinates: { lat: number; lng: number } | null) => void;
-  error?: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  label?: string;
+  name: string;
   isRequired?: boolean;
+  isInvalid?: boolean;
+  errorMessage?: string;
 }
 
-const AddressAutocomplete = ({
-  label,
-  placeholder,
+const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
-  error,
+  placeholder = 'Enter address',
+  label,
+  name,
   isRequired = false,
-}: AddressAutocompleteProps) => {
-  const [inputValue, setInputValue] = useState(value);
-  const [predictions, setPredictions] = useState<Place[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
-  const autocompleteInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-  const mapDivRef = useRef<HTMLDivElement | null>(null);
-  const scriptLoadedRef = useRef<boolean>(false);
+  isInvalid = false,
+  errorMessage,
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const [isScriptLoading, setIsScriptLoading] = useState(false);
+  const [scriptError, setScriptError] = useState(false);
 
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const hoverBgColor = useColorModeValue('gray.50', 'gray.700');
-
-  // Load Google Maps API script
-  useEffect(() => {
-    // Check if script is already loaded
-    if (window.google && window.google.maps && window.google.maps.places) {
-      initGoogleServices();
-      return;
-    }
+  // Initialize Google Maps places autocomplete
+  const initAutocomplete = () => {
+    if (!inputRef.current || !(window as any).google) return;
     
-    // Check if script is already being loaded by another component
-    if (!scriptLoadedRef.current && !document.querySelector(`script[src*="maps.googleapis.com/maps/api"]`)) {
-      const googleMapScript = document.createElement('script');
-      googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
-      googleMapScript.async = true;
-      googleMapScript.defer = true;
-      googleMapScript.onload = () => {
-        scriptLoadedRef.current = true;
-        initGoogleServices();
-      };
-      document.head.appendChild(googleMapScript);
-    } else {
-      // If script is already being loaded, wait for it to complete
-      const checkForGoogleMaps = setInterval(() => {
-        if (window.google && window.google.maps && window.google.maps.places) {
-          clearInterval(checkForGoogleMaps);
-          initGoogleServices();
-        }
-      }, 100);
-      
-      // Clean up interval if component unmounts
-      return () => clearInterval(checkForGoogleMaps);
-    }
-  }, []);
+    try {
+      // Create autocomplete instance
+      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
+        fields: ['formatted_address', 'geometry'],
+        types: ['geocode'],
+      });
 
-  // Initialize Google services
-  const initGoogleServices = () => {
-    if (window.google && window.google.maps && window.google.maps.places) {
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      // Add place_changed event listener
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current?.getPlace();
+        if (place?.formatted_address) {
+          onChange(place.formatted_address);
+        }
+      });
       
-      // Create a dummy div for PlacesService (required by the API)
-      // Only create it once to prevent duplicate warnings
-      if (!mapDivRef.current) {
-        mapDivRef.current = document.createElement('div');
-        mapDivRef.current.style.display = 'none';
-        document.body.appendChild(mapDivRef.current);
-      }
-      
-      if (mapDivRef.current) {
-        placesService.current = new window.google.maps.places.PlacesService(mapDivRef.current);
-      }
+      setIsScriptLoaded(true);
+      setScriptError(false);
+    } catch (error) {
+      console.error('Error initializing Google Maps Places:', error);
+      setScriptError(true);
     }
   };
 
-  // Handle input change
+  // Load script when component mounts
+  useEffect(() => {
+    if (!(window as any).google?.maps?.places && !isScriptLoading) {
+      setIsScriptLoading(true);
+      loadGoogleMapsScript(() => {
+        setIsScriptLoaded(true);
+        setIsScriptLoading(false);
+        initAutocomplete();
+      });
+    } else if ((window as any).google?.maps?.places) {
+      setIsScriptLoaded(true);
+      initAutocomplete();
+    }
+    
+    return () => {
+      // Clean up listener when component unmounts
+      if (autocompleteRef.current) {
+        google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-    
-    if (value.length > 2 && autocompleteService.current) {
-      setIsLoading(true);
-      setShowSuggestions(true);
-      
-      autocompleteService.current.getPlacePredictions(
-        {
-          input: value,
-          componentRestrictions: { country: 'ng' }, // Restrict to Nigeria
-          types: ['geocode'], // Use only 'geocode' to avoid the warning about mixing 'address' with other types
-        },
-        (predictions, status) => {
-          setIsLoading(false);
-          
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-            setPredictions(predictions);
-          } else {
-            setPredictions([]);
-          }
-        }
-      );
-    } else {
-      setPredictions([]);
-    }
+    onChange(e.target.value);
   };
-
-  // Handle suggestion selection
-  const handleSelectPlace = (place: Place) => {
-    setInputValue(place.description);
-    setPredictions([]);
-    setShowSuggestions(false);
-    
-    // Get coordinates from place_id
-    if (placesService.current) {
-      placesService.current.getDetails(
-        {
-          placeId: place.place_id,
-          fields: ['geometry']
-        },
-        (result, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && result && result.geometry) {
-            const lat = result.geometry.location?.lat();
-            const lng = result.geometry.location?.lng();
-            
-            if (lat && lng) {
-              onChange(place.description, { lat, lng });
-            } else {
-              onChange(place.description, null);
-            }
-          } else {
-            onChange(place.description, null);
-          }
-        }
-      );
-    } else {
-      onChange(place.description, null);
-    }
-  };
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current && 
-        !suggestionsRef.current.contains(event.target as Node) &&
-        event.target !== autocompleteInputRef.current
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Update input value when value prop changes
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  // Cleanup when component unmounts
-  useEffect(() => {
-    return () => {
-      // Don't remove the mapDiv element as it might be used by other components
-    };
-  }, []);
 
   return (
-    <FormControl isRequired={isRequired} isInvalid={!!error}>
-      <FormLabel>
-        <FaMapMarkerAlt style={{ display: 'inline', marginRight: '8px' }} />
-        {label}
-      </FormLabel>
-      <Box position="relative">
+    <FormControl isRequired={isRequired} isInvalid={isInvalid}>
+      {label && <FormLabel>{label}</FormLabel>}
+      <Stack spacing={0}>
         <InputGroup>
+          <InputLeftElement pointerEvents="none">
+            <Icon as={FaMapMarkerAlt} color="gray.500" />
+          </InputLeftElement>
           <Input
-            ref={autocompleteInputRef}
-            value={inputValue}
+            ref={inputRef}
+            value={value}
             onChange={handleInputChange}
             placeholder={placeholder}
-            onFocus={() => predictions.length > 0 && setShowSuggestions(true)}
+            pr={isScriptLoading ? '40px' : undefined}
+            name={name}
           />
-          <InputRightElement>
-            {isLoading && <Spinner size="sm" />}
-          </InputRightElement>
+          {isScriptLoading && (
+            <Box position="absolute" right="8px" top="50%" transform="translateY(-50%)">
+              <Spinner size="sm" color="gray.400" />
+            </Box>
+          )}
         </InputGroup>
-
-        {/* Suggestions dropdown */}
-        {showSuggestions && predictions.length > 0 && (
-          <Box
-            ref={suggestionsRef}
-            position="absolute"
-            zIndex={10}
-            width="100%"
-            mt={1}
-            bg={bgColor}
-            boxShadow="md"
-            borderRadius="md"
-            border="1px solid"
-            borderColor={borderColor}
-            maxH="200px"
-            overflowY="auto"
-          >
-            <List spacing={0}>
-              {predictions.map((place) => (
-                <ListItem
-                  key={place.place_id}
-                  px={4}
-                  py={2}
-                  cursor="pointer"
-                  _hover={{ bg: hoverBgColor }}
-                  onClick={() => handleSelectPlace(place)}
-                >
-                  <Text fontSize="sm">
-                    <FaMapMarkerAlt style={{ display: 'inline', marginRight: '8px' }} />
-                    {place.description}
-                  </Text>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
+        
+        {scriptError && (
+          <Text color="yellow.500" fontSize="xs" mt={1}>
+            Address suggestions unavailable. You can still enter the address manually.
+          </Text>
         )}
-      </Box>
-      {error && <FormErrorMessage>{error}</FormErrorMessage>}
+        
+        {isInvalid && errorMessage && (
+          <FormErrorMessage>{errorMessage}</FormErrorMessage>
+        )}
+      </Stack>
     </FormControl>
   );
 };
