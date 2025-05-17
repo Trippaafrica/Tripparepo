@@ -31,6 +31,7 @@ interface FormData {
   senderPhone: string;
   recipientName: string;
   recipientPhone: string;
+  weight?: number;
   pickup_coordinates?: {
     lat: number;
     lng: number;
@@ -47,6 +48,7 @@ interface FormErrors {
   item_description?: string;
   senderPhone?: string;
   recipientPhone?: string;
+  weight?: string;
 }
 
 const DeliveryRequestForm = () => {
@@ -64,6 +66,7 @@ const DeliveryRequestForm = () => {
     senderPhone: '',
     recipientName: '',
     recipientPhone: '',
+    weight: undefined,
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
@@ -89,6 +92,14 @@ const DeliveryRequestForm = () => {
     
     if (!/^\+?[1-9]\d{9,14}$/.test(formData.recipientPhone.trim())) {
       newErrors.recipientPhone = 'Please enter a valid phone number';
+    }
+
+    if (formData.weight !== undefined) {
+      if (formData.weight <= 0) {
+        newErrors.weight = 'Weight must be greater than 0';
+      } else if (formData.delivery_type === 'bike' && formData.weight > 20) {
+        newErrors.weight = 'Bike delivery is limited to items under 20kg';
+      }
     }
     
     setErrors(newErrors);
@@ -137,6 +148,7 @@ const DeliveryRequestForm = () => {
         pickup_contact_phone: formData.senderPhone,
         dropoff_contact_name: formData.recipientName,
         dropoff_contact_phone: formData.recipientPhone,
+        weight: formData.weight || null,
         pickup_coordinates: formData.pickup_coordinates,
         dropoff_coordinates: formData.dropoff_coordinates,
         status: 'pending',
@@ -169,7 +181,7 @@ const DeliveryRequestForm = () => {
           duration: 5000,
           isClosable: true,
         });
-        navigate(`/request/${newRequestId}`);
+        navigate(`/bidding/${newRequestId}`);
       }
     } catch (err) {
       console.error('Error in form submission:', err);
@@ -191,6 +203,13 @@ const DeliveryRequestForm = () => {
     // Clear error when field is edited
     if (errors[name as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleWeightChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, weight: value ? parseFloat(value) : undefined }));
+    if (errors.weight) {
+      setErrors((prev) => ({ ...prev, weight: undefined }));
     }
   };
 
@@ -226,6 +245,30 @@ const DeliveryRequestForm = () => {
             {errors.item_description && (
               <Text color="red.500" fontSize="sm" mt={1}>
                 {errors.item_description}
+              </Text>
+            )}
+          </FormControl>
+
+          <FormControl isInvalid={!!errors.weight}>
+            <FormLabel>
+              <Icon as={FaWeight} mr={2} />
+              Package Weight (kg)
+            </FormLabel>
+            <NumberInput 
+              min={0} 
+              value={formData.weight || ''} 
+              onChange={handleWeightChange}
+            >
+              <NumberInputField placeholder="Enter weight in kg" />
+            </NumberInput>
+            {formData.delivery_type === 'bike' && (
+              <Text fontSize="xs" color="gray.500" mt={1}>
+                Note: Bike delivery is limited to packages under 20kg
+              </Text>
+            )}
+            {errors.weight && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {errors.weight}
               </Text>
             )}
           </FormControl>
