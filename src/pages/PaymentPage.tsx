@@ -26,7 +26,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { FaCreditCard, FaShieldAlt, FaLock } from 'react-icons/fa';
+import { FaCreditCard, FaShieldAlt, FaLock, FaMapMarkerAlt } from 'react-icons/fa';
 
 interface DeliveryRequest {
   id: string;
@@ -312,18 +312,60 @@ const PaymentPage = () => {
 
                 <Divider />
 
-                <Flex justify="space-between" align="center">
-                  <Text color="gray.300">Order Amount:</Text>
-                  <Text color="brand.secondary" fontWeight="bold" fontSize="xl">
-                    ₦{totalAmount.toLocaleString()}
-                  </Text>
-                </Flex>
+                {/* Delivery Location Summary */}
+                {deliveryRequest && (
+                  <Box>
+                    <Heading size="sm" color="brand.secondary" mb={2}>Delivery Details</Heading>
+                    <Stack spacing={3} direction={{ base: 'column', md: 'row' }}>
+                      <Box flex={1}>
+                        <HStack>
+                          <Icon as={FaMapMarkerAlt} color="green.400" />
+                          <Text color="gray.200" fontWeight="bold">Pickup:</Text>
+                        </HStack>
+                        {deliveryRequest.pickup_address ? (
+                          <Text color="white" ml={6} fontSize="sm">{deliveryRequest.pickup_address}</Text>
+                        ) : (
+                          <Text color="red.300" ml={6} fontSize="sm">No pickup address provided</Text>
+                        )}
+                      </Box>
+                      <Box flex={1}>
+                        <HStack>
+                          <Icon as={FaMapMarkerAlt} color="red.400" />
+                          <Text color="gray.200" fontWeight="bold">Dropoff:</Text>
+                        </HStack>
+                        {deliveryRequest.dropoff_address ? (
+                          <Text color="white" ml={6} fontSize="sm">{deliveryRequest.dropoff_address}</Text>
+                        ) : (
+                          <Text color="red.300" ml={6} fontSize="sm">No dropoff address provided</Text>
+                        )}
+                      </Box>
+                    </Stack>
+                    <Divider my={3} />
+                  </Box>
+                )}
 
-                <Text color="gray.400" fontSize="sm">
-                  Rider Fee: ₦{bidAmount.toLocaleString()} + Service Fee: ₦{serviceFee.toLocaleString()}
-                </Text>
-
-                <Divider />
+                {/* Payment amount summary */}
+                {deliveryRequest && acceptedBid && (
+                  <Box p={4} bg="rgba(26, 32, 44, 0.4)" borderRadius="md">
+                    <VStack align="stretch" spacing={2}>
+                      <Flex justify="space-between">
+                        <Text color="gray.300">Rider Fee:</Text>
+                        <Text color="white">₦{acceptedBid.amount.toLocaleString()}</Text>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Text color="gray.300">Service Fee:</Text>
+                        <Text color="white">₦{(deliveryRequest.service_fee || 1200).toLocaleString()}</Text>
+                      </Flex>
+                      <Divider my={1} />
+                      <Flex justify="space-between">
+                        <Text color="white" fontWeight="bold">Total:</Text>
+                        <Text color="brand.secondary" fontWeight="bold">
+                          ₦{((deliveryRequest.total_amount || 0) || (acceptedBid.amount + (deliveryRequest.service_fee || 1200))).toLocaleString()}
+                        </Text>
+                      </Flex>
+                    </VStack>
+                  </Box>
+                )}
 
                 <Heading size="sm" color="brand.secondary">Payment Method</Heading>
 

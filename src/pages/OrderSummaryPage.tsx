@@ -104,6 +104,7 @@ const OrderSummaryPage = () => {
         throw new Error('Failed to fetch delivery request details');
       }
 
+      console.log("Delivery request data:", requestData);
       setDeliveryRequest(requestData);
 
       // Fetch the accepted bid
@@ -244,7 +245,11 @@ const OrderSummaryPage = () => {
                       <Icon as={FaMapMarkerAlt} color="green.400" />
                       <Text color="gray.200" fontWeight="bold">Pickup:</Text>
                     </HStack>
-                    <Text color="white" ml={6}>{deliveryRequest.pickup_address}</Text>
+                    {deliveryRequest.pickup_address ? (
+                      <Text color="white" ml={6}>{deliveryRequest.pickup_address}</Text>
+                    ) : (
+                      <Text color="red.300" ml={6}>No pickup address provided</Text>
+                    )}
                     <Text color="gray.300" ml={6} fontSize="sm">
                       Contact: {deliveryRequest.pickup_contact_name}, {deliveryRequest.pickup_contact_phone}
                     </Text>
@@ -254,7 +259,11 @@ const OrderSummaryPage = () => {
                       <Icon as={FaMapMarkerAlt} color="red.400" />
                       <Text color="gray.200" fontWeight="bold">Dropoff:</Text>
                     </HStack>
-                    <Text color="white" ml={6}>{deliveryRequest.dropoff_address}</Text>
+                    {deliveryRequest.dropoff_address ? (
+                      <Text color="white" ml={6}>{deliveryRequest.dropoff_address}</Text>
+                    ) : (
+                      <Text color="red.300" ml={6}>No dropoff address provided</Text>
+                    )}
                     <Text color="gray.300" ml={6} fontSize="sm">
                       Contact: {deliveryRequest.dropoff_contact_name}, {deliveryRequest.dropoff_contact_phone}
                     </Text>
