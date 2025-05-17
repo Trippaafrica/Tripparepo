@@ -3,13 +3,20 @@ import {
   HStack, 
   VStack, 
   Text, 
-  Image, 
   Icon, 
   Avatar,
   Badge,
-  Tooltip
+  Tooltip,
+  Flex,
+  Divider,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  Grid,
+  GridItem
 } from '@chakra-ui/react';
-import { FaStar, FaClock, FaMotorcycle, FaTruck, FaShuttleVan, FaGasPump, FaInfoCircle } from 'react-icons/fa';
+import { FaStar, FaClock, FaMotorcycle, FaTruck, FaShuttleVan, FaGasPump, FaInfoCircle, FaNairaSign } from 'react-icons/fa6';
 
 interface RiderProfileCardProps {
   riderName: string;
@@ -87,62 +94,69 @@ const RiderProfileCard = ({
       boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
       width="100%"
     >
-      <HStack spacing={4} align="start">
-        {/* Rider Avatar - Use name-based avatar since images may not exist */}
-        <Avatar 
-          size="lg" 
-          name={riderName} 
-          bg={generateAvatarColor()}
-        />
+      {/* Top section - Rider info and amount */}
+      <Grid templateColumns="auto 1fr auto" gap={4}>
+        {/* Rider Avatar */}
+        <GridItem>
+          <Avatar 
+            size="lg" 
+            name={riderName} 
+            bg={generateAvatarColor()}
+          />
+        </GridItem>
         
-        <VStack align="start" flex={1} spacing={1}>
-          {/* Rider Name and Rating */}
-          <Text fontWeight="bold" color="white">{riderName}</Text>
-          <HStack>
-            <Icon as={FaStar} color="yellow.400" />
-            <Text color="gray.300" fontSize="sm">
-              {rating.toFixed(1)}
-            </Text>
-          </HStack>
-          
-          {/* Vehicle Type */}
-          <Badge colorScheme={getVehicleColor()} display="flex" alignItems="center">
-            <Icon as={getVehicleIcon()} mr={1} /> 
-            {getVehicleName()}
-          </Badge>
-        </VStack>
+        {/* Rider Name and Rating */}
+        <GridItem>
+          <VStack align="start" spacing={1}>
+            <Text fontWeight="bold" color="white" fontSize="lg">{riderName}</Text>
+            <HStack>
+              <Icon as={FaStar} color="yellow.400" />
+              <Text color="gray.300" fontSize="sm">
+                {rating.toFixed(1)} rating
+              </Text>
+              
+              <Badge colorScheme={getVehicleColor()} ml={2} display="flex" alignItems="center">
+                <Icon as={getVehicleIcon()} mr={1} /> 
+                {getVehicleName()}
+              </Badge>
+            </HStack>
+          </VStack>
+        </GridItem>
 
-        {/* Bid Details */}
-        <VStack align="end" spacing={1}>
-          {/* Total Amount (Bid + Service Fee) */}
-          <Text fontWeight="bold" fontSize="lg" color="brand.secondary">
-            ₦{totalAmount.toLocaleString()}
-          </Text>
-          
-          {/* Bid Amount */}
-          <HStack>
-            <Text fontSize="sm" color="gray.300">
-              Rider bid: ₦{amount.toLocaleString()}
-            </Text>
-            <Tooltip label="Service fee: ₦1,200" placement="top">
-              <span><Icon as={FaInfoCircle} color="gray.400" fontSize="xs" /></span>
+        {/* Total Price */}
+        <GridItem>
+          <Stat>
+            <StatLabel color="gray.300" fontSize="xs">Total Price</StatLabel>
+            <StatNumber color="brand.secondary" fontWeight="bold">₦{totalAmount.toLocaleString()}</StatNumber>
+            <Tooltip label={`Rider bid: ₦${amount.toLocaleString()} + Service fee: ₦${serviceFee.toLocaleString()}`} placement="top">
+              <StatHelpText color="gray.400" fontSize="xs" cursor="help">
+                <Icon as={FaInfoCircle} mr={1} />
+                Breakdown
+              </StatHelpText>
             </Tooltip>
-          </HStack>
-          
-          {/* Estimated Time */}
-          <HStack>
-            <Icon as={FaClock} color="blue.400" size="sm" />
-            <Text fontSize="sm" color="gray.300">
-              {estimatedTime}
-            </Text>
-          </HStack>
-          
-          {/* Bid Time */}
-          <Text fontSize="xs" color="gray.400">
-            Bid placed {bidTime}
-          </Text>
-        </VStack>
-      </HStack>
+          </Stat>
+        </GridItem>
+      </Grid>
+
+      {/* Divider */}
+      <Divider my={3} borderColor="rgba(157, 78, 221, 0.2)" />
+      
+      {/* Bottom section - Delivery details */}
+      <Flex justify="space-between" align="center" wrap="wrap">
+        {/* Estimated Time */}
+        <HStack spacing={2} mr={4}>
+          <Icon as={FaClock} color="blue.400" />
+          <VStack spacing={0} align="start">
+            <Text fontSize="xs" color="gray.400">Estimated Time</Text>
+            <Text color="white" fontWeight="medium">{estimatedTime}</Text>
+          </VStack>
+        </HStack>
+        
+        {/* Bid Time */}
+        <Text fontSize="xs" color="gray.400">
+          Bid placed {bidTime}
+        </Text>
+      </Flex>
     </Box>
   );
 };

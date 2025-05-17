@@ -18,11 +18,17 @@ import {
   Divider,
   Stack,
   Avatar,
+  Select,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  IconButton
 } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar } from 'react-icons/fa';
+import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar, FaSortAmountDown, FaSortAmountUp, FaFilter } from 'react-icons/fa';
 import CountdownTimer from '../components/CountdownTimer';
 import RiderProfileCard from '../components/RiderProfileCard';
 
@@ -77,6 +83,7 @@ const BiddingPage = () => {
   const [request, setRequest] = useState<DeliveryRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [waitingStartTime] = useState(new Date());
+  const [sortBy, setSortBy] = useState<'amount_asc' | 'amount_desc' | 'time_asc' | 'time_desc'>('amount_asc');
 
   useEffect(() => {
     fetchDeliveryRequest();
@@ -386,6 +393,24 @@ const BiddingPage = () => {
     fetchBids();
   };
 
+  // Get sorted bids based on current sort criterion
+  const getSortedBids = () => {
+    return [...bids].sort((a, b) => {
+      switch (sortBy) {
+        case 'amount_asc':
+          return a.amount - b.amount;
+        case 'amount_desc':
+          return b.amount - a.amount;
+        case 'time_asc':
+          return a.estimated_time.localeCompare(b.estimated_time);
+        case 'time_desc':
+          return b.estimated_time.localeCompare(a.estimated_time);
+        default:
+          return 0;
+      }
+    });
+  };
+
   if (isLoading) {
     return (
       <Container maxW="container.md" py={8}>
@@ -454,9 +479,55 @@ const BiddingPage = () => {
               <VStack spacing={4} align="stretch">
                 <HStack spacing={4} justify="space-between">
                   <Heading size="md" color="brand.secondary">Available Bids</Heading>
-                  <Badge colorScheme={bids.length > 0 ? "green" : "yellow"} fontSize="sm">
-                    {bids.length} {bids.length === 1 ? 'bid' : 'bids'} available
-                  </Badge>
+                  
+                  <HStack>
+                    {bids.length > 0 && (
+                      <Menu>
+                        <MenuButton
+                          as={IconButton}
+                          size="sm"
+                          aria-label="Sort options"
+                          icon={<FaFilter />}
+                          variant="outline"
+                          colorScheme="brand"
+                        />
+                        <MenuList bg="rgba(26, 32, 44, 0.9)" borderColor="rgba(157, 78, 221, 0.2)">
+                          <MenuItem 
+                            icon={<FaSortAmountDown />} 
+                            onClick={() => setSortBy('amount_asc')}
+                            bg={sortBy === 'amount_asc' ? 'rgba(157, 78, 221, 0.2)' : 'transparent'}
+                          >
+                            Price: Low to High
+                          </MenuItem>
+                          <MenuItem 
+                            icon={<FaSortAmountUp />} 
+                            onClick={() => setSortBy('amount_desc')}
+                            bg={sortBy === 'amount_desc' ? 'rgba(157, 78, 221, 0.2)' : 'transparent'}
+                          >
+                            Price: High to Low
+                          </MenuItem>
+                          <MenuItem 
+                            icon={<FaClock />} 
+                            onClick={() => setSortBy('time_asc')}
+                            bg={sortBy === 'time_asc' ? 'rgba(157, 78, 221, 0.2)' : 'transparent'}
+                          >
+                            Time: Shortest First
+                          </MenuItem>
+                          <MenuItem 
+                            icon={<FaClock />} 
+                            onClick={() => setSortBy('time_desc')}
+                            bg={sortBy === 'time_desc' ? 'rgba(157, 78, 221, 0.2)' : 'transparent'}
+                          >
+                            Time: Longest First
+                          </MenuItem>
+                        </MenuList>
+                      </Menu>
+                    )}
+                    
+                    <Badge colorScheme={bids.length > 0 ? "green" : "yellow"} fontSize="sm">
+                      {bids.length} {bids.length === 1 ? 'bid' : 'bids'} available
+                    </Badge>
+                  </HStack>
                 </HStack>
 
                 {bids.length === 0 ? (
@@ -483,7 +554,7 @@ const BiddingPage = () => {
                   </VStack>
                 ) : (
                   <VStack spacing={4} align="stretch">
-                    {bids.map((bid) => (
+                    {getSortedBids().map((bid) => (
                       <Box key={bid.id}>
                         <RiderProfileCard
                           riderName={bid.rider_name || ''}
