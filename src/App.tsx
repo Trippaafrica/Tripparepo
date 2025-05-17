@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link as RouterLink } from 'react-router-dom';
 import { Box, useColorModeValue, Icon, Text, VStack, HStack, ChakraProvider } from '@chakra-ui/react';
-import { FaHome, FaSearch, FaShoppingCart, FaUser } from 'react-icons/fa';
+import { FaHome, FaShoppingCart, FaUser } from 'react-icons/fa';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import theme from './theme';
 
@@ -10,8 +10,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Orders from './pages/Orders';
-import OrderTracking from './pages/OrderTracking';
 import ComingSoon from './pages/ComingSoon';
+import DeliveryBooking from './pages/DeliveryBooking';
 
 // Components
 import Navbar from './components/Navbar';
@@ -72,7 +72,7 @@ const BottomNavigation = () => {
       borderColor={borderColor}
       boxShadow="0 -2px 10px rgba(0, 0, 0, 0.05)"
     >
-      <HStack justify="space-between" px={1}>
+      <HStack justify="space-around" px={1}>
         <NavItem 
           icon={FaHome} 
           label="Home" 
@@ -80,16 +80,10 @@ const BottomNavigation = () => {
           isActive={pathname === '/'} 
         />
         <NavItem 
-          icon={FaSearch} 
-          label="Search" 
-          to="/coming-soon/search" 
-          isActive={pathname === '/coming-soon/search'} 
-        />
-        <NavItem 
           icon={FaShoppingCart} 
           label="Orders" 
           to="/orders" 
-          isActive={pathname === '/orders' || pathname.includes('/order-tracking')} 
+          isActive={pathname === '/orders' || pathname.includes('/order')} 
         />
         <NavItem 
           icon={FaUser} 
@@ -123,12 +117,11 @@ function App() {
                 <Route path="/coming-soon/:serviceType" element={<ComingSoon />} />
                 
                 {/* Delivery routes */}
-                <Route path="/delivery/:type" element={<ComingSoon />} />
+                <Route path="/delivery/:type" element={<ProtectedRoute><DeliveryBooking /></ProtectedRoute>} />
                 
                 {/* Protected routes */}
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-                <Route path="/order-tracking/:orderId" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
               </Routes>
             </Box>
             <BottomNavigation />
