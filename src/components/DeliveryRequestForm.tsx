@@ -14,12 +14,12 @@ import {
   SimpleGrid,
   Icon,
   Text,
+  Textarea,
 } from '@chakra-ui/react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaUser, FaPhone, FaBox } from 'react-icons/fa';
-import AddressAutocomplete from './AddressAutocomplete';
+import { FaUser, FaPhone, FaBox, FaMapMarkerAlt } from 'react-icons/fa';
 
 interface FormData {
   delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
@@ -28,8 +28,6 @@ interface FormData {
   item_description: string;
   package_weight: number | null;
   status: 'pending' | 'accepted' | 'completed' | 'cancelled';
-  pickup_coordinates: { lat: number; lng: number } | null;
-  dropoff_coordinates: { lat: number; lng: number } | null;
   pickup_contact_name: string;
   pickup_contact_phone: string;
   dropoff_contact_name: string;
@@ -58,8 +56,6 @@ const DeliveryRequestForm = () => {
     item_description: '',
     package_weight: null,
     status: 'pending',
-    pickup_coordinates: null,
-    dropoff_coordinates: null,
     pickup_contact_name: '',
     pickup_contact_phone: '',
     dropoff_contact_name: '',
@@ -121,8 +117,6 @@ const DeliveryRequestForm = () => {
         item_description: formData.item_description,
         package_weight: formData.package_weight,
         status: formData.status,
-        pickup_coordinates: formData.pickup_coordinates,
-        dropoff_coordinates: formData.dropoff_coordinates,
         sender_name: formData.pickup_contact_name, // Renamed field for database column
         sender_phone: formData.pickup_contact_phone, // Renamed field for database column
         receiver_name: formData.dropoff_contact_name, // Renamed field for database column
@@ -178,28 +172,6 @@ const DeliveryRequestForm = () => {
       ...prev,
       package_weight: value ? parseFloat(value) : null,
     }));
-  };
-
-  const handlePickupAddressChange = (address: string, coordinates: { lat: number; lng: number } | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      pickup_address: address,
-      pickup_coordinates: coordinates,
-    }));
-    if (errors.pickup_address) {
-      setErrors((prev) => ({ ...prev, pickup_address: undefined }));
-    }
-  };
-
-  const handleDropoffAddressChange = (address: string, coordinates: { lat: number; lng: number } | null) => {
-    setFormData((prev) => ({
-      ...prev,
-      dropoff_address: address,
-      dropoff_coordinates: coordinates,
-    }));
-    if (errors.dropoff_address) {
-      setErrors((prev) => ({ ...prev, dropoff_address: undefined }));
-    }
   };
 
   return (
@@ -271,14 +243,24 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
-          <AddressAutocomplete
-            label="Pickup Address"
-            placeholder="Enter pickup address"
-            value={formData.pickup_address}
-            onChange={handlePickupAddressChange}
-            error={errors.pickup_address}
-            isRequired={true}
-          />
+          <FormControl isRequired isInvalid={!!errors.pickup_address}>
+            <FormLabel>
+              <Icon as={FaMapMarkerAlt} mr={2} />
+              Pickup Address
+            </FormLabel>
+            <Textarea
+              name="pickup_address"
+              value={formData.pickup_address}
+              onChange={handleChange}
+              placeholder="Enter full pickup address"
+              rows={3}
+            />
+            {errors.pickup_address && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {errors.pickup_address}
+              </Text>
+            )}
+          </FormControl>
 
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
             <FormControl isRequired>
@@ -313,14 +295,24 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
-          <AddressAutocomplete
-            label="Dropoff Address"
-            placeholder="Enter dropoff address"
-            value={formData.dropoff_address}
-            onChange={handleDropoffAddressChange}
-            error={errors.dropoff_address}
-            isRequired={true}
-          />
+          <FormControl isRequired isInvalid={!!errors.dropoff_address}>
+            <FormLabel>
+              <Icon as={FaMapMarkerAlt} mr={2} />
+              Dropoff Address
+            </FormLabel>
+            <Textarea
+              name="dropoff_address"
+              value={formData.dropoff_address}
+              onChange={handleChange}
+              placeholder="Enter full dropoff address"
+              rows={3}
+            />
+            {errors.dropoff_address && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {errors.dropoff_address}
+              </Text>
+            )}
+          </FormControl>
 
           <FormControl>
             <FormLabel>Package Weight (kg)</FormLabel>
