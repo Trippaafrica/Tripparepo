@@ -13,6 +13,10 @@ import Orders from './pages/Orders';
 import ComingSoon from './pages/ComingSoon';
 import DeliveryBooking from './pages/DeliveryBooking';
 import OrderDetails from './pages/OrderDetails';
+import BiddingPage from './pages/BiddingPage';
+import OrderSummaryPage from './pages/OrderSummaryPage';
+import PaymentPage from './pages/PaymentPage';
+import TrackingPage from './pages/TrackingPage';
 
 // Components
 import Navbar from './components/Navbar';
@@ -119,6 +123,10 @@ function App() {
                 
                 {/* Delivery routes */}
                 <Route path="/delivery/:type" element={<ProtectedRoute><DeliveryBooking /></ProtectedRoute>} />
+                <Route path="/bidding/:requestId" element={<ProtectedRoute><BiddingPage /></ProtectedRoute>} />
+                <Route path="/order-summary/:requestId/:bidId" element={<ProtectedRoute><OrderSummaryPage /></ProtectedRoute>} />
+                <Route path="/payment/:requestId/:bidId" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
+                <Route path="/tracking/:requestId" element={<ProtectedRoute><TrackingPage /></ProtectedRoute>} />
                 
                 {/* Protected routes */}
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
