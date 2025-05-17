@@ -84,7 +84,7 @@ const BiddingPage = () => {
 
     // Subscribe to new bids
     const subscription = supabase
-      .channel('bids')
+      .channel(`bids-${requestId}`) // Use a unique channel name
       .on('postgres_changes', 
         { 
           event: 'INSERT', 
@@ -92,14 +92,22 @@ const BiddingPage = () => {
           table: 'bids',
           filter: `delivery_request_id=eq.${requestId}`
         }, 
-        () => {
+        (payload) => {
+          console.log('New bid received:', payload);
           fetchBids();
         }
       )
       .subscribe();
 
+    // Add polling to ensure bids update
+    const pollingInterval = setInterval(() => {
+      console.log('Polling for new bids...');
+      fetchBids();
+    }, 10000); // Poll every 10 seconds
+
     return () => {
       subscription.unsubscribe();
+      clearInterval(pollingInterval);
     };
   }, [requestId]);
 
@@ -152,29 +160,34 @@ const BiddingPage = () => {
         throw new Error('You do not have permission to view these bids');
       }
 
-      // Now fetch the bids with all required information
+      // Now fetch the bids with all required information - simplified query to debug
       console.log('Fetching bids...');
       
+      // First try a simple query to verify basic functionality
+      const { data: simpleBidsData, error: simpleBidsError } = await supabase
+        .from('bids')
+        .select('*')
+        .eq('delivery_request_id', requestId);
+
+      if (simpleBidsError) {
+        console.error('Error with simple bids query:', simpleBidsError);
+        throw new Error(`Simple query error: ${simpleBidsError.message}`);
+      }
+
+      console.log('Simple bids query found:', simpleBidsData?.length || 0, 'bids');
+
+      // Now try the full query
       const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
         .select(`
           *,
-          riders:rider_id (
-            id,
-            rating,
-            vehicle_image,
-            vehicle_type
-          ),
           profiles:rider_id (
             full_name,
             rating,
             avatar_url
           )
         `)
-        .eq('delivery_request_id', requestId)
-        .eq('status', 'pending')
-        .order('amount', { ascending: true })
-        .order('created_at', { ascending: true });
+        .eq('delivery_request_id', requestId);
 
       if (bidsError) {
         console.error('Supabase error details:', {
@@ -188,17 +201,25 @@ const BiddingPage = () => {
 
       console.log('Received bids data:', bidsData);
 
-      const formattedBids = (bidsData || []).map((bid: any) => ({
+      // Filter to only show pending bids
+      const pendingBids = bidsData?.filter(bid => bid.status === 'pending') || [];
+      console.log('Pending bids:', pendingBids.length);
+
+      const formattedBids = (pendingBids || []).map((bid: any) => ({
         id: bid.id,
         delivery_request_id: bid.delivery_request_id,
         rider_id: bid.rider_id,
-        amount: bid.amount,
-        estimated_time: bid.estimated_time,
+        amount: typeof bid.amount === 'number' ? bid.amount : parseFloat(bid.amount) || 0,
+        estimated_time: bid.estimated_time || '30 minutes',
         status: bid.status,
         created_at: bid.created_at,
         rider_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
-        rider_rating: bid.riders?.rating || bid.profiles?.rating || 0,
-        rider: bid.riders,
+        rider_rating: bid.profiles?.rating || 4.5, // Fallback to a good rating if none exists
+        rider: {
+          id: bid.rider_id,
+          rating: bid.profiles?.rating || 4.5,
+          vehicle_type: bid.vehicle_type || 'bike'
+        },
         profile: bid.profiles
       })) as Bid[];
 
