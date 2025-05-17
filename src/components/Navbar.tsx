@@ -11,7 +11,6 @@ import {
 import { useLocation } from 'react-router-dom';
 import { FaMoon, FaSun } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import TrippaLogo from '../assets/Trippa.svg';
 
 export default function Navbar() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -67,7 +66,7 @@ export default function Navbar() {
           position="relative"
         >
           <HStack spacing={2} justify="center" w="100%">
-            <Image src={TrippaLogo} alt="Trippa Logo" w={8} h={8} />
+            <Image src="/assets/Trippa.svg" alt="Trippa Logo" w={8} h={8} />
             <Text
               textAlign="center"
               fontWeight="bold"
