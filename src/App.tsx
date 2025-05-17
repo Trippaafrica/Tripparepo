@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import ComingSoon from './pages/ComingSoon';
 import DeliveryBooking from './pages/DeliveryBooking';
+import OrderDetails from './pages/OrderDetails';
 
 // Components
 import Navbar from './components/Navbar';
@@ -122,6 +123,7 @@ function App() {
                 {/* Protected routes */}
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                 <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+                <Route path="/order/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
               </Routes>
             </Box>
             <BottomNavigation />
