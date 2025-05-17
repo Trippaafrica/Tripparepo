@@ -14,36 +14,13 @@ import {
 } from '@chakra-ui/react';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 
-// Load the Google Maps script
-const loadGoogleMapsScript = (callback: () => void) => {
-  const existingScript = document.getElementById('google-maps-script');
-  
-  // If script already exists, just use it
-  if (existingScript) {
-    if ((window as any).google?.maps?.places) {
-      callback();
-    } else {
-      existingScript.addEventListener('load', callback);
-    }
-    return;
+// Declare global window with google property for TypeScript
+declare global {
+  interface Window {
+    google: typeof google;
+    initGooglePlaces: () => void;
   }
-  
-  // Create script element
-  const script = document.createElement('script');
-  script.id = 'google-maps-script';
-  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDAPCO0RO432dTqJm0tH94o3g5s-kliK9o&libraries=places';
-  script.async = true;
-  script.defer = true;
-  
-  // Add load handler
-  script.addEventListener('load', callback);
-  script.addEventListener('error', (e) => {
-    console.error('Failed to load Google Maps API:', e);
-  });
-  
-  // Add the script to the page
-  document.head.appendChild(script);
-};
+}
 
 interface AddressAutocompleteProps {
   value: string;
@@ -69,67 +46,75 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   errorMessage,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-  const [isScriptLoading, setIsScriptLoading] = useState(false);
+  const autocompleteRef = useRef<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [scriptError, setScriptError] = useState(false);
 
-  // Initialize Google Maps places autocomplete
-  const initAutocomplete = () => {
-    if (!inputRef.current || !(window as any).google) return;
+  useEffect(() => {
+    // Only load the script if Google Maps isn't already loaded
+    if (!(window as any).google?.maps?.places) {
+      setIsLoading(true);
+      
+      // Create the script element
+      const script = document.createElement('script');
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDAPCO0RO432dTqJm0tH94o3g5s-kliK9o&libraries=places';
+      script.async = true;
+      script.defer = true;
+      
+      // Set up load and error handlers
+      script.onload = () => {
+        setIsLoading(false);
+        initializeAutocomplete();
+      };
+      
+      script.onerror = () => {
+        console.error('Failed to load Google Maps API');
+        setIsLoading(false);
+        setScriptError(true);
+      };
+      
+      // Add the script to the page
+      document.head.appendChild(script);
+      
+      // Clean up function for when component unmounts
+      return () => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      };
+    } else {
+      // Google Maps already loaded, initialize autocomplete
+      initializeAutocomplete();
+    }
+  }, []);
+
+  const initializeAutocomplete = () => {
+    if (!inputRef.current || !(window as any).google?.maps?.places) return;
     
     try {
-      // Create autocomplete instance with type casting to avoid TypeScript errors
-      autocompleteRef.current = new google.maps.places.Autocomplete(
-        inputRef.current, 
-        {
-          fields: ['formatted_address', 'geometry'],
-          types: ['geocode']
-        } as any
-      );
-
+      // Initialize the autocomplete using the same approach as LocationPicker
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+        types: ['address'],
+        componentRestrictions: { country: 'ng' }, // Restrict to Nigeria
+      });
+      
       // Add place_changed event listener
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current?.getPlace();
         if (place) {
-          if (place.formatted_address) {
-            onChange(place.formatted_address);
-          }
+          onChange(place.formatted_address || '');
           if (onPlaceSelect) {
             onPlaceSelect(place);
           }
         }
       });
       
-      setIsScriptLoaded(true);
       setScriptError(false);
     } catch (error) {
       console.error('Error initializing Google Maps Places:', error);
       setScriptError(true);
     }
   };
-
-  // Load script when component mounts
-  useEffect(() => {
-    if (!(window as any).google?.maps?.places && !isScriptLoading) {
-      setIsScriptLoading(true);
-      loadGoogleMapsScript(() => {
-        setIsScriptLoaded(true);
-        setIsScriptLoading(false);
-        initAutocomplete();
-      });
-    } else if ((window as any).google?.maps?.places) {
-      setIsScriptLoaded(true);
-      initAutocomplete();
-    }
-    
-    return () => {
-      // Clean up listener when component unmounts
-      if (autocompleteRef.current) {
-        google.maps.event.clearInstanceListeners(autocompleteRef.current);
-      }
-    };
-  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange(e.target.value);
@@ -148,10 +133,10 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             value={value}
             onChange={handleInputChange}
             placeholder={placeholder}
-            pr={isScriptLoading ? '40px' : undefined}
+            pr={isLoading ? '40px' : undefined}
             name={name}
           />
-          {isScriptLoading && (
+          {isLoading && (
             <Box position="absolute" right="8px" top="50%" transform="translateY(-50%)">
               <Spinner size="sm" color="gray.400" />
             </Box>
