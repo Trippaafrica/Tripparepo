@@ -320,14 +320,11 @@ const BiddingPage = () => {
 
       console.log('Successfully updated bid status');
 
-      // Update delivery request status
+      // Update delivery request status - removed accepted_bid_id which doesn't exist in schema
       const { error: requestUpdateError } = await supabase
         .from('delivery_requests')
         .update({ 
           status: 'accepted',
-          delivery_status: 'accepted',
-          order_status: 'accepted',
-          accepted_bid_id: bidId,
           service_fee: 1200, // Add service fee
           total_amount: bid.amount + 1200 // Calculate total amount
         })
