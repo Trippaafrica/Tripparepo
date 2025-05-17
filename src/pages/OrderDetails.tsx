@@ -34,14 +34,15 @@ import { useAuth } from '../contexts/AuthContext';
 interface OrderDetails {
   id: string;
   delivery_type: string;
-  pickup_location: string;
-  dropoff_location: string;
+  pickup_address: string;
+  dropoff_address: string;
   status: string;
   package_weight?: number;
-  sender_name: string;
-  sender_phone: string;
-  receiver_name: string;
-  receiver_phone: string;
+  pickup_contact_name?: string;
+  pickup_contact_phone?: string;
+  dropoff_contact_name?: string;
+  dropoff_contact_phone?: string;
+  item_description?: string;
   pickup_code: string;
   dropoff_code: string;
   created_at: string;
@@ -105,14 +106,15 @@ const OrderDetails = () => {
       const transformedOrder: OrderDetails = {
         id: orderData.id,
         delivery_type: orderData.delivery_type,
-        pickup_location: orderData.pickup_location,
-        dropoff_location: orderData.dropoff_location,
+        pickup_address: orderData.pickup_location,
+        dropoff_address: orderData.dropoff_location,
         status: orderData.status,
         package_weight: orderData.package_weight,
-        sender_name: orderData.sender_name,
-        sender_phone: orderData.sender_phone,
-        receiver_name: orderData.receiver_name,
-        receiver_phone: orderData.receiver_phone,
+        pickup_contact_name: orderData.sender_name,
+        pickup_contact_phone: orderData.sender_phone,
+        dropoff_contact_name: orderData.receiver_name,
+        dropoff_contact_phone: orderData.receiver_phone,
+        item_description: orderData.item_description,
         pickup_code: orderData.pickup_code || 'PU1234', // Fallback for demo
         dropoff_code: orderData.dropoff_code || 'DO5678', // Fallback for demo
         created_at: orderData.created_at,
@@ -382,10 +384,10 @@ const OrderDetails = () => {
                   <Icon as={FaMapMarkerAlt} color="green.500" />
                   <Text fontWeight="bold">Pickup Location</Text>
                 </HStack>
-                <Text ml={6} mb={2}>{order.pickup_location}</Text>
+                <Text ml={6} mb={2}>{order.pickup_address}</Text>
                 <VStack spacing={1} align="start" ml={6}>
-                  <Text fontSize="sm"><b>Contact:</b> {order.sender_name}</Text>
-                  <Text fontSize="sm"><b>Phone:</b> {order.sender_phone}</Text>
+                  <Text fontSize="sm"><b>Contact:</b> {order.pickup_contact_name}</Text>
+                  <Text fontSize="sm"><b>Phone:</b> {order.pickup_contact_phone}</Text>
                   <HStack mt={2} bg="green.50" p={2} borderRadius="md">
                     <Text color="green.700" fontWeight="bold">Pickup Code:</Text>
                     <Text color="green.700" fontSize="lg" fontWeight="bold">{order.pickup_code}</Text>
@@ -401,10 +403,10 @@ const OrderDetails = () => {
                   <Icon as={FaMapMarkerAlt} color="red.500" />
                   <Text fontWeight="bold">Dropoff Location</Text>
                 </HStack>
-                <Text ml={6} mb={2}>{order.dropoff_location}</Text>
+                <Text ml={6} mb={2}>{order.dropoff_address}</Text>
                 <VStack spacing={1} align="start" ml={6}>
-                  <Text fontSize="sm"><b>Contact:</b> {order.receiver_name}</Text>
-                  <Text fontSize="sm"><b>Phone:</b> {order.receiver_phone}</Text>
+                  <Text fontSize="sm"><b>Contact:</b> {order.dropoff_contact_name}</Text>
+                  <Text fontSize="sm"><b>Phone:</b> {order.dropoff_contact_phone}</Text>
                   <HStack mt={2} bg="red.50" p={2} borderRadius="md">
                     <Text color="red.700" fontWeight="bold">Dropoff Code:</Text>
                     <Text color="red.700" fontSize="lg" fontWeight="bold">{order.dropoff_code}</Text>

@@ -23,14 +23,19 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  IconButton
+  IconButton,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
 } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar, FaSortAmountDown, FaSortAmountUp, FaFilter } from 'react-icons/fa';
+import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar, FaSortAmountDown, FaSortAmountUp, FaFilter, FaRoute } from 'react-icons/fa';
 import CountdownTimer from '../components/CountdownTimer';
 import RiderProfileCard from '../components/RiderProfileCard';
+import { calculateDistance, estimateDeliveryTime } from '../services/distance';
 
 interface DeliveryRequest {
   id: string;
@@ -38,9 +43,23 @@ interface DeliveryRequest {
   pickup_address: string;
   dropoff_address: string;
   item_description: string;
-  weight?: number;
+  package_weight?: number;
   dimensions?: string;
   status: string;
+  pickup_coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  dropoff_coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  pickup_contact_name?: string;
+  pickup_contact_phone?: string;
+  dropoff_contact_name?: string;
+  dropoff_contact_phone?: string;
+  estimated_distance_km?: number;
+  estimated_duration?: string;
 }
 
 interface Profile {
@@ -87,42 +106,83 @@ const BiddingPage = () => {
 
   useEffect(() => {
     fetchDeliveryRequest();
-    fetchBids();
-
-    // Subscribe to new bids
-    const subscription = supabase
-      .channel(`bids-${requestId}`) // Use a unique channel name
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'bids',
-          filter: `delivery_request_id=eq.${requestId}`
-        }, 
-        (payload) => {
-          console.log('New bid received:', payload);
-          fetchBids();
-        }
-      )
-      .subscribe();
-
-    // Add polling to ensure bids update
-    const pollingInterval = setInterval(() => {
-      console.log('Polling for new bids...');
-      fetchBids();
-    }, 10000); // Poll every 10 seconds
-
-    return () => {
-      subscription.unsubscribe();
-      clearInterval(pollingInterval);
-    };
   }, [requestId]);
+
+  useEffect(() => {
+    if (request) {
+      fetchBids();
+      calculateRouteInfo();
+
+      // Subscribe to new bids
+      const subscription = supabase
+        .channel(`bids-${requestId}`) // Use a unique channel name
+        .on('postgres_changes', 
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'bids',
+            filter: `delivery_request_id=eq.${requestId}`
+          }, 
+          (payload) => {
+            console.log('New bid received:', payload);
+            fetchBids();
+          }
+        )
+        .subscribe();
+
+      // Add polling to ensure bids update
+      const pollingInterval = setInterval(() => {
+        console.log('Polling for new bids...');
+        fetchBids();
+      }, 10000); // Poll every 10 seconds
+
+      return () => {
+        subscription.unsubscribe();
+        clearInterval(pollingInterval);
+      };
+    }
+  }, [request]);
+
+  const calculateRouteInfo = async () => {
+    if (request?.pickup_coordinates && request?.dropoff_coordinates) {
+      try {
+        // Calculate distance and duration between pickup and dropoff
+        const result = await calculateDistance(
+          request.pickup_coordinates,
+          request.dropoff_coordinates
+        );
+        
+        // Update request with distance and duration info
+        setRequest(prev => prev ? {
+          ...prev,
+          estimated_distance_km: result.distance,
+          estimated_duration: result.duration
+        } : null);
+        
+      } catch (error) {
+        console.error('Error calculating route info:', error);
+      }
+    } else {
+      // Fallback values if coordinates are not available
+      setRequest(prev => prev ? {
+        ...prev,
+        estimated_distance_km: 5.3, // Example fallback
+        estimated_duration: '25-35 minutes' // Example fallback
+      } : null);
+    }
+  };
 
   const fetchDeliveryRequest = async () => {
     try {
       const { data, error } = await supabase
         .from('delivery_requests')
-        .select('*')
+        .select(`
+          *,
+          pickup_contact_name,
+          pickup_contact_phone,
+          dropoff_contact_name,
+          dropoff_contact_phone
+        `)
         .eq('id', requestId)
         .single();
 
@@ -242,7 +302,6 @@ const BiddingPage = () => {
         title: 'Error',
         description: error.message || 'Failed to fetch bids',
         status: 'error',
-        duration: 5000,
         isClosable: true,
       });
     } finally {
@@ -436,6 +495,8 @@ const BiddingPage = () => {
                 {request && (
                   <>
                     <Divider />
+                    
+                    {/* Location information */}
                     <Stack spacing={4} direction={{ base: 'column', md: 'row' }}>
                       <Box flex={1}>
                         <HStack>
@@ -443,6 +504,11 @@ const BiddingPage = () => {
                           <Text color="gray.200" fontWeight="bold">Pickup:</Text>
                         </HStack>
                         <Text color="white" ml={6}>{request.pickup_address}</Text>
+                        {request.pickup_contact_name && (
+                          <Text color="gray.300" fontSize="sm" ml={6}>
+                            Contact: {request.pickup_contact_name} ({request.pickup_contact_phone})
+                          </Text>
+                        )}
                       </Box>
                       <Box flex={1}>
                         <HStack>
@@ -450,14 +516,21 @@ const BiddingPage = () => {
                           <Text color="gray.200" fontWeight="bold">Dropoff:</Text>
                         </HStack>
                         <Text color="white" ml={6}>{request.dropoff_address}</Text>
+                        {request.dropoff_contact_name && (
+                          <Text color="gray.300" fontSize="sm" ml={6}>
+                            Contact: {request.dropoff_contact_name} ({request.dropoff_contact_phone})
+                          </Text>
+                        )}
                       </Box>
                     </Stack>
+                    
+                    {/* Item information */}
                     <Text color="gray.200">
                       <strong>Item:</strong> {request.item_description}
                     </Text>
-                    {request.weight && (
+                    {request.package_weight && (
                       <Text color="gray.200">
-                        <strong>Weight:</strong> {request.weight}kg
+                        <strong>Weight:</strong> {request.package_weight}kg
                       </Text>
                     )}
                     {request.dimensions && (
@@ -465,6 +538,30 @@ const BiddingPage = () => {
                         <strong>Dimensions:</strong> {request.dimensions}
                       </Text>
                     )}
+                    
+                    {/* Route information */}
+                    <Divider />
+                    <HStack spacing={8} justify="space-between" flexWrap="wrap">
+                      <Stat flex="1" minW="120px">
+                        <StatLabel color="gray.400">
+                          <Icon as={FaRoute} mr={1} />
+                          Distance
+                        </StatLabel>
+                        <StatNumber color="white">
+                          {request.estimated_distance_km?.toFixed(1) || "Calculating..."} km
+                        </StatNumber>
+                      </Stat>
+                      
+                      <Stat flex="1" minW="120px">
+                        <StatLabel color="gray.400">
+                          <Icon as={FaClock} mr={1} />
+                          Estimated Time
+                        </StatLabel>
+                        <StatNumber color="white">
+                          {request.estimated_duration || "Calculating..."}
+                        </StatNumber>
+                      </Stat>
+                    </HStack>
                   </>
                 )}
               </VStack>

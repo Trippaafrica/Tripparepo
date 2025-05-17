@@ -32,6 +32,7 @@ interface DeliveryRequest {
   sender_phone: string;
   receiver_name: string;
   receiver_phone: string;
+  item_description?: string;
 }
 
 interface Bid {
