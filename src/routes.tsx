@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box } from '@chakra-ui/react';
 import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
+import BottomNavigation from './components/BottomNavigation';
 import Home from './pages/Home';
 import DeliveryBooking from './pages/DeliveryBooking';
 import BiddingPage from './pages/BiddingPage';
@@ -10,6 +11,7 @@ import SignUp from './pages/SignUp';
 import OrderSummary from './pages/OrderSummary';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Orders from './pages/Orders';
+import Profile from './pages/Profile';
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -30,7 +32,8 @@ export default function AppRoutes() {
   return (
     <Box minH="100vh">
       <Navbar />
-      <Box pt="16">
+      {/* Adjust padding for mobile to account for bottom navigation */}
+      <Box pt="16" pb={{ base: '24', md: '0' }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route
@@ -73,10 +76,19 @@ export default function AppRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
         </Routes>
       </Box>
+      <BottomNavigation />
     </Box>
   );
 } 

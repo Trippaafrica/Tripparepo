@@ -37,6 +37,7 @@ const Navbar = () => {
       borderColor={borderColor}
       backdropFilter="blur(10px)"
       zIndex={1000}
+      display={{ base: 'none', md: 'block' }}
     >
       <Container maxW="container.xl">
         <HStack justify="space-between" h="16">
@@ -56,39 +57,52 @@ const Navbar = () => {
 
           <HStack spacing={4}>
             {user ? (
-              <Menu>
-                <MenuButton
-                  as={Button}
+              <>
+                <Button
+                  as={RouterLink}
+                  to="/orders"
                   variant="ghost"
-                  leftIcon={<Icon as={FaUser} />}
+                  leftIcon={<Icon as={FaClipboardList} />}
                   _hover={{
                     bg: 'rgba(57, 255, 20, 0.1)',
                   }}
                 >
-                  {user.email}
-                </MenuButton>
-                <MenuList bg={bgColor} borderColor={borderColor}>
-                  <MenuItem
-                    as={RouterLink}
-                    to="/orders"
-                    icon={<Icon as={FaClipboardList} />}
+                  My Orders
+                </Button>
+                <Menu>
+                  <MenuButton
+                    as={Button}
+                    variant="ghost"
+                    leftIcon={<Icon as={FaUser} />}
                     _hover={{
                       bg: 'rgba(57, 255, 20, 0.1)',
                     }}
                   >
-                    My Orders
-                  </MenuItem>
-                  <MenuItem
-                    icon={<Icon as={FaSignOutAlt} />}
-                    onClick={handleSignOut}
-                    _hover={{
-                      bg: 'rgba(57, 255, 20, 0.1)',
-                    }}
-                  >
-                    Sign Out
-                  </MenuItem>
-                </MenuList>
-              </Menu>
+                    {user.email}
+                  </MenuButton>
+                  <MenuList bg={bgColor} borderColor={borderColor}>
+                    <MenuItem
+                      as={RouterLink}
+                      to="/profile"
+                      icon={<Icon as={FaUser} />}
+                      _hover={{
+                        bg: 'rgba(57, 255, 20, 0.1)',
+                      }}
+                    >
+                      Profile
+                    </MenuItem>
+                    <MenuItem
+                      icon={<Icon as={FaSignOutAlt} />}
+                      onClick={handleSignOut}
+                      _hover={{
+                        bg: 'rgba(57, 255, 20, 0.1)',
+                      }}
+                    >
+                      Sign Out
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              </>
             ) : (
               <>
                 <Button
