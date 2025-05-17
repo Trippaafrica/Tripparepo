@@ -138,6 +138,8 @@ const DeliveryRequestForm = () => {
     setIsLoading(true);
     
     try {
+      console.log('Creating delivery request with data:', formData);
+      
       const requestData = {
         user_id: user?.id,
         pickup_address: formData.pickupAddress,
@@ -160,6 +162,7 @@ const DeliveryRequestForm = () => {
         .select();
 
       if (error) {
+        console.error('Error creating delivery request:', error);
         toast({
           title: 'Error',
           description: error.message,
@@ -167,13 +170,13 @@ const DeliveryRequestForm = () => {
           duration: 5000,
           isClosable: true,
         });
-        console.error('Error creating delivery request:', error);
         return;
       }
 
       const newRequestId = data?.[0]?.id;
       
       if (newRequestId) {
+        console.log('Delivery request created successfully with ID:', newRequestId);
         toast({
           title: 'Success',
           description: 'Your delivery request has been created',
@@ -181,13 +184,19 @@ const DeliveryRequestForm = () => {
           duration: 5000,
           isClosable: true,
         });
-        navigate(`/bidding/${newRequestId}`);
+        
+        // Use setTimeout to ensure the toast appears before navigation
+        setTimeout(() => {
+          navigate(`/bidding/${newRequestId}`);
+        }, 500);
+      } else {
+        throw new Error('Failed to get ID of new delivery request');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error in form submission:', err);
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred',
+        description: err.message || 'An unexpected error occurred',
         status: 'error',
         duration: 5000,
         isClosable: true,
