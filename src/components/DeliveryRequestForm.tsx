@@ -148,7 +148,7 @@ const DeliveryRequestForm = () => {
         pickup_contact_phone: formData.senderPhone,
         dropoff_contact_name: formData.recipientName,
         dropoff_contact_phone: formData.recipientPhone,
-        weight: formData.weight || null,
+        package_weight: formData.weight || null,
         pickup_coordinates: formData.pickup_coordinates,
         dropoff_coordinates: formData.dropoff_coordinates,
         status: 'pending',
