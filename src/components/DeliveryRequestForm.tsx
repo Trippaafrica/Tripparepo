@@ -117,10 +117,10 @@ const DeliveryRequestForm = () => {
         item_description: formData.item_description,
         package_weight: formData.package_weight,
         status: formData.status,
-        sender_name: formData.pickup_contact_name,
-        sender_phone: formData.pickup_contact_phone,
-        receiver_name: formData.dropoff_contact_name,
-        receiver_phone: formData.dropoff_contact_phone,
+        pickup_contact_name: formData.pickup_contact_name,
+        pickup_contact_phone: formData.pickup_contact_phone,
+        dropoff_contact_name: formData.dropoff_contact_name,
+        dropoff_contact_phone: formData.dropoff_contact_phone,
       };
       
       const { data, error } = await supabase
