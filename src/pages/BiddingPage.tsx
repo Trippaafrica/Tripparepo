@@ -130,50 +130,63 @@ const BiddingPage = () => {
         )
         .subscribe();
 
-      // Add polling to ensure bids update
+      // Add polling at a much slower rate to reduce API calls
       const pollingInterval = setInterval(() => {
-        console.log('Polling for new bids...');
-        fetchBids();
-      }, 10000); // Poll every 10 seconds
+        // Only poll if there are no bids yet or if status is still pending
+        if (bids.length === 0 || request.status === 'pending') {
+          console.log('Polling for new bids...');
+          fetchBids();
+        }
+      }, 30000); // Poll every 30 seconds instead of 10
 
       return () => {
         subscription.unsubscribe();
         clearInterval(pollingInterval);
       };
     }
-  }, [request]);
+  }, [request, bids.length, requestId]);
 
   const calculateRouteInfo = async () => {
-    if (request?.pickup_coordinates && request?.dropoff_coordinates) {
-      try {
-        // Calculate distance and duration between pickup and dropoff
-        const result = await calculateDistance(
-          request.pickup_coordinates,
-          request.dropoff_coordinates
-        );
-        
-        // Update request with distance and duration info
+    // Only calculate if we don't already have the values
+    if (request && !request.estimated_distance_km) {
+      if (request?.pickup_coordinates && request?.dropoff_coordinates) {
+        try {
+          // Calculate distance and duration between pickup and dropoff
+          const result = await calculateDistance(
+            request.pickup_coordinates,
+            request.dropoff_coordinates
+          );
+          
+          // Update request with distance and duration info
+          setRequest(prev => prev ? {
+            ...prev,
+            estimated_distance_km: result.distance,
+            estimated_duration: result.duration
+          } : null);
+          
+        } catch (error) {
+          console.error('Error calculating route info:', error);
+          // Set fallback values
+          setRequest(prev => prev ? {
+            ...prev,
+            estimated_distance_km: 5.3,
+            estimated_duration: '25-35 minutes'
+          } : null);
+        }
+      } else {
+        // Fallback values if coordinates are not available
         setRequest(prev => prev ? {
           ...prev,
-          estimated_distance_km: result.distance,
-          estimated_duration: result.duration
+          estimated_distance_km: 5.3,
+          estimated_duration: '25-35 minutes'
         } : null);
-        
-      } catch (error) {
-        console.error('Error calculating route info:', error);
       }
-    } else {
-      // Fallback values if coordinates are not available
-      setRequest(prev => prev ? {
-        ...prev,
-        estimated_distance_km: 5.3, // Example fallback
-        estimated_duration: '25-35 minutes' // Example fallback
-      } : null);
     }
   };
 
   const fetchDeliveryRequest = async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('delivery_requests')
         .select(`
@@ -195,11 +208,17 @@ const BiddingPage = () => {
         status: 'error',
         duration: 5000,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchBids = async () => {
+    // Prevent multiple simultaneous API calls
+    if (isLoading) return;
+    
     try {
+      setIsLoading(true);
       console.log('Fetching bids for request:', requestId);
       
       // First, verify the request ID
@@ -207,72 +226,57 @@ const BiddingPage = () => {
         throw new Error('No request ID provided');
       }
 
-      // First verify that the user has access to this delivery request
-      const { data: requestData, error: requestError } = await supabase
-        .from('delivery_requests')
-        .select('id, user_id')
-        .eq('id', requestId)
-        .single();
+      // Skip verification if we already have the request
+      if (!request) {
+        // Verify that the user has access to this delivery request
+        const { data: requestData, error: requestError } = await supabase
+          .from('delivery_requests')
+          .select('id, user_id')
+          .eq('id', requestId)
+          .single();
 
-      if (requestError) {
-        console.error('Error fetching delivery request:', requestError);
-        throw new Error('Could not verify access to delivery request');
+        if (requestError) {
+          console.error('Error fetching delivery request:', requestError);
+          throw new Error('Could not verify access to delivery request');
+        }
+
+        if (!requestData) {
+          throw new Error('Delivery request not found');
+        }
+
+        if (requestData.user_id !== user?.id) {
+          throw new Error('You do not have permission to view these bids');
+        }
       }
 
-      if (!requestData) {
-        throw new Error('Delivery request not found');
-      }
-
-      if (requestData.user_id !== user?.id) {
-        throw new Error('You do not have permission to view these bids');
-      }
-
-      // Now fetch the bids with all required information - simplified query to debug
-      console.log('Fetching bids...');
-      
-      // First try a simple query to verify basic functionality
-      const { data: simpleBidsData, error: simpleBidsError } = await supabase
-        .from('bids')
-        .select('*')
-        .eq('delivery_request_id', requestId);
-
-      if (simpleBidsError) {
-        console.error('Error with simple bids query:', simpleBidsError);
-        throw new Error(`Simple query error: ${simpleBidsError.message}`);
-      }
-
-      console.log('Simple bids query found:', simpleBidsData?.length || 0, 'bids');
-
-      // Now try the full query
+      // Use a simplified query to get only what's needed
       const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
         .select(`
-          *,
+          id,
+          delivery_request_id,
+          rider_id,
+          amount,
+          estimated_time,
+          status,
+          created_at,
           profiles:rider_id (
             id,
             full_name,
             rating
           )
         `)
-        .eq('delivery_request_id', requestId);
+        .eq('delivery_request_id', requestId)
+        .eq('status', 'pending'); // Only get pending bids to reduce data
 
       if (bidsError) {
-        console.error('Supabase error details:', {
-          message: bidsError.message,
-          details: bidsError.details,
-          hint: bidsError.hint,
-          code: bidsError.code
-        });
-        throw new Error(`Database error: ${bidsError.message}${bidsError.details ? ` - ${bidsError.details}` : ''}`);
+        console.error('Error fetching bids:', bidsError);
+        throw new Error(`Database error: ${bidsError.message}`);
       }
 
-      console.log('Received bids data:', bidsData);
+      console.log('Received bids data:', bidsData?.length || 0, 'pending bids');
 
-      // Filter to only show pending bids
-      const pendingBids = bidsData?.filter(bid => bid.status === 'pending') || [];
-      console.log('Pending bids:', pendingBids.length);
-
-      const formattedBids = (pendingBids || []).map((bid: any) => ({
+      const formattedBids = (bidsData || []).map((bid: any) => ({
         id: bid.id,
         delivery_request_id: bid.delivery_request_id,
         rider_id: bid.rider_id,
@@ -285,10 +289,9 @@ const BiddingPage = () => {
         rider: {
           id: bid.rider_id,
           rating: bid.profiles?.rating || 4.5,
-          vehicle_type: bid.vehicle_type || request?.delivery_type || 'bike'
+          vehicle_type: request?.delivery_type || 'bike'
         },
         profile: {
-          id: bid.profiles?.id,
           full_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
           rating: bid.profiles?.rating || 4.5
         }
