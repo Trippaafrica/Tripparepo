@@ -3,14 +3,15 @@ import {
   Flex,
   Text,
   IconButton,
-  Icon,
+  Image,
   useColorModeValue,
   useColorMode,
   HStack,
 } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
-import { FaMoon, FaSun, FaCar } from 'react-icons/fa';
+import { FaMoon, FaSun } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import TrippaLogo from '../assets/Trippa.svg';
 
 export default function Navbar() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -26,7 +27,7 @@ export default function Navbar() {
   const getPageTitle = () => {
     const path = location.pathname;
     
-    if (path === '/') return 'WebTrip';
+    if (path === '/') return 'Trippa';
     if (path === '/profile') return 'My Profile';
     if (path === '/orders') return 'My Orders';
     if (path.includes('/order-tracking')) return 'Order Tracking';
@@ -39,7 +40,7 @@ export default function Navbar() {
       return `${feature?.charAt(0).toUpperCase()}${feature?.slice(1)} - Coming Soon`;
     }
     
-    return 'WebTrip';
+    return 'Trippa';
   };
   
   return (
@@ -66,7 +67,7 @@ export default function Navbar() {
           position="relative"
         >
           <HStack spacing={2} justify="center" w="100%">
-            <Icon as={FaCar} color="brand.primary" w={6} h={6} />
+            <Image src={TrippaLogo} alt="Trippa Logo" w={8} h={8} />
             <Text
               textAlign="center"
               fontWeight="bold"
