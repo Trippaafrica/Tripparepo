@@ -31,6 +31,14 @@ interface FormData {
   senderPhone: string;
   recipientName: string;
   recipientPhone: string;
+  pickup_coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  dropoff_coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 interface FormErrors {
@@ -87,6 +95,31 @@ const DeliveryRequestForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handlePlaceSelect = (type: 'pickup' | 'dropoff') => (place: google.maps.places.PlaceResult) => {
+    const location = place.geometry?.location;
+    if (location && place.formatted_address) {
+      if (type === 'pickup') {
+        setFormData(prev => ({
+          ...prev,
+          pickupAddress: place.formatted_address || '',
+          pickup_coordinates: {
+            lat: location.lat(),
+            lng: location.lng()
+          }
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          dropoffAddress: place.formatted_address || '',
+          dropoff_coordinates: {
+            lat: location.lat(),
+            lng: location.lng()
+          }
+        }));
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -104,6 +137,8 @@ const DeliveryRequestForm = () => {
         pickup_contact_phone: formData.senderPhone,
         dropoff_contact_name: formData.recipientName,
         dropoff_contact_phone: formData.recipientPhone,
+        pickup_coordinates: formData.pickup_coordinates,
+        dropoff_coordinates: formData.dropoff_coordinates,
         status: 'pending',
       };
 
@@ -228,6 +263,7 @@ const DeliveryRequestForm = () => {
             name="pickupAddress"
             value={formData.pickupAddress}
             onChange={(value) => setFormData((prev) => ({ ...prev, pickupAddress: value }))}
+            onPlaceSelect={handlePlaceSelect('pickup')}
             placeholder="Enter pickup address"
             isRequired
             isInvalid={!!errors.pickupAddress}
@@ -267,6 +303,7 @@ const DeliveryRequestForm = () => {
             name="dropoffAddress"
             value={formData.dropoffAddress}
             onChange={(value) => setFormData((prev) => ({ ...prev, dropoffAddress: value }))}
+            onPlaceSelect={handlePlaceSelect('dropoff')}
             placeholder="Enter dropoff address"
             isRequired
             isInvalid={!!errors.dropoffAddress}

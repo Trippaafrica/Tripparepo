@@ -31,7 +31,7 @@ const loadGoogleMapsScript = (callback: () => void) => {
   // Create script element
   const script = document.createElement('script');
   script.id = 'google-maps-script';
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'AIzaSyB-XYFou8gZPNLQYU-TA_HOsQfGLcmilX8'}&libraries=places`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyB-XYFou8gZPNLQYU-TA_HOsQfGLcmilX8'}&libraries=places`;
   script.async = true;
   script.defer = true;
   
@@ -48,6 +48,7 @@ const loadGoogleMapsScript = (callback: () => void) => {
 interface AddressAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
+  onPlaceSelect?: (place: google.maps.places.PlaceResult) => void;
   placeholder?: string;
   label?: string;
   name: string;
@@ -59,6 +60,7 @@ interface AddressAutocompleteProps {
 const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
+  onPlaceSelect,
   placeholder = 'Enter address',
   label,
   name,
@@ -81,13 +83,19 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
         fields: ['formatted_address', 'geometry'],
         types: ['geocode'],
+        componentRestrictions: { country: 'ng' }, // Restrict to Nigeria
       });
 
       // Add place_changed event listener
       autocompleteRef.current.addListener('place_changed', () => {
         const place = autocompleteRef.current?.getPlace();
-        if (place?.formatted_address) {
-          onChange(place.formatted_address);
+        if (place) {
+          if (place.formatted_address) {
+            onChange(place.formatted_address);
+          }
+          if (onPlaceSelect) {
+            onPlaceSelect(place);
+          }
         }
       });
       
