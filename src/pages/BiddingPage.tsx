@@ -23,6 +23,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar } from 'react-icons/fa';
+import CountdownTimer from '../components/CountdownTimer';
+import RiderProfileCard from '../components/RiderProfileCard';
 
 interface DeliveryRequest {
   id: string;
@@ -38,6 +40,14 @@ interface DeliveryRequest {
 interface Profile {
   full_name: string;
   rating: number;
+  avatar_url?: string;
+}
+
+interface Rider {
+  id: string;
+  rating: number;
+  vehicle_image?: string;
+  vehicle_type?: 'bike' | 'truck' | 'van' | 'fuel';
 }
 
 interface Bid {
@@ -50,7 +60,8 @@ interface Bid {
   created_at: string;
   rider_name?: string;
   rider_rating?: number;
-  rider?: Profile;
+  rider?: Rider;
+  profile?: Profile;
 }
 
 interface SupabaseBid extends Omit<Bid, 'profiles'> {
@@ -65,6 +76,7 @@ const BiddingPage = () => {
   const [bids, setBids] = useState<Bid[]>([]);
   const [request, setRequest] = useState<DeliveryRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [waitingStartTime] = useState(new Date());
 
   useEffect(() => {
     fetchDeliveryRequest();
@@ -78,7 +90,7 @@ const BiddingPage = () => {
           event: 'INSERT', 
           schema: 'public', 
           table: 'bids',
-          filter: `request_id=eq.${requestId}`
+          filter: `delivery_request_id=eq.${requestId}`
         }, 
         () => {
           fetchBids();
@@ -140,7 +152,7 @@ const BiddingPage = () => {
         throw new Error('You do not have permission to view these bids');
       }
 
-      // Now fetch the bids
+      // Now fetch the bids with all required information
       console.log('Fetching bids...');
       
       const { data: bidsData, error: bidsError } = await supabase
@@ -148,7 +160,15 @@ const BiddingPage = () => {
         .select(`
           *,
           riders:rider_id (
-            rating
+            id,
+            rating,
+            vehicle_image,
+            vehicle_type
+          ),
+          profiles:rider_id (
+            full_name,
+            rating,
+            avatar_url
           )
         `)
         .eq('delivery_request_id', requestId)
@@ -176,9 +196,10 @@ const BiddingPage = () => {
         estimated_time: bid.estimated_time,
         status: bid.status,
         created_at: bid.created_at,
-        rider_name: 'Rider ' + bid.rider_id.substring(0, 4),
-        rider_rating: bid.riders?.rating || 0,
-        rider: bid.riders
+        rider_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
+        rider_rating: bid.riders?.rating || bid.profiles?.rating || 0,
+        rider: bid.riders,
+        profile: bid.profiles
       })) as Bid[];
 
       console.log('Formatted bids:', formattedBids);
@@ -202,6 +223,25 @@ const BiddingPage = () => {
       dateStyle: 'medium',
       timeStyle: 'short',
     });
+  };
+
+  // Format relative time for bid placement (e.g., "5 minutes ago")
+  const formatRelativeTime = (dateString: string) => {
+    const now = new Date();
+    const bidTime = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - bidTime.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'just now';
+    if (diffInMinutes === 1) return '1 minute ago';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours === 1) return '1 hour ago';
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return '1 day ago';
+    return `${diffInDays} days ago`;
   };
 
   const acceptBid = async (bidId: string) => {
@@ -305,6 +345,18 @@ const BiddingPage = () => {
     }
   };
 
+  // Calculate time elapsed since request creation
+  const getTimeElapsed = () => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - waitingStartTime.getTime()) / (1000 * 60));
+    return diffInMinutes;
+  };
+
+  // Refresh bids when the timer completes
+  const handleTimerComplete = () => {
+    fetchBids();
+  };
+
   if (isLoading) {
     return (
       <Container maxW="container.md" py={8}>
@@ -373,70 +425,58 @@ const BiddingPage = () => {
               <VStack spacing={4} align="stretch">
                 <HStack spacing={4} justify="space-between">
                   <Heading size="md" color="brand.secondary">Available Bids</Heading>
-                  <Badge colorScheme={bids.length > 0 ? "green" : "yellow"}>
-                    {bids.length} {bids.length === 1 ? 'bid' : 'bids'}
+                  <Badge colorScheme={bids.length > 0 ? "green" : "yellow"} fontSize="sm">
+                    {bids.length} {bids.length === 1 ? 'bid' : 'bids'} available
                   </Badge>
                 </HStack>
 
                 {bids.length === 0 ? (
-                  <VStack py={8} spacing={4}>
-                    <Spinner size="lg" color="brand.secondary" />
-                    <Text color="gray.200" textAlign="center">
+                  <VStack py={8} spacing={4} align="center">
+                    <CountdownTimer duration={15} onComplete={handleTimerComplete} />
+                    <Text color="gray.200" textAlign="center" mt={2}>
                       Waiting for rider bids...
                     </Text>
                     <Text color="gray.400" fontSize="sm" textAlign="center">
-                      Riders will be notified of your delivery request and start placing their bids soon.
+                      Your delivery request has been sent to nearby riders.
+                      <br />Bids should start appearing soon.
                     </Text>
+                    {getTimeElapsed() > 3 && (
+                      <Button 
+                        mt={4} 
+                        variant="outline" 
+                        colorScheme="brand" 
+                        size="sm"
+                        onClick={() => fetchBids()}
+                      >
+                        Refresh Bids
+                      </Button>
+                    )}
                   </VStack>
                 ) : (
                   <VStack spacing={4} align="stretch">
                     {bids.map((bid) => (
-                      <Card key={bid.id} bg="rgba(26, 26, 46, 0.6)">
-                        <CardBody>
-                          <Stack direction={{ base: 'column', md: 'row' }} spacing={4} justify="space-between" align="center">
-                            <HStack spacing={4}>
-                              <Avatar size="md" name={bid.rider_name} />
-                              <Box>
-                                <Text color="white" fontWeight="bold">{bid.rider_name}</Text>
-                                <HStack spacing={1}>
-                                  <Icon as={FaStar} color="yellow.400" />
-                                  <Text color="gray.300" fontSize="sm">
-                                    {bid.rider_rating?.toFixed(1)}
-                                  </Text>
-                                </HStack>
-                                <Text color="gray.300" fontSize="sm">
-                                  {formatDate(bid.created_at)}
-                                </Text>
-                              </Box>
-                            </HStack>
-                            <Stack direction={{ base: 'column', sm: 'row' }} spacing={4} align="center">
-                              <VStack spacing={2}>
-                                <HStack>
-                                  <Icon as={FaMoneyBillWave} color="green.400" />
-                                  <Text color="white" fontWeight="bold">
-                                    ₦{bid.amount.toLocaleString()}
-                                  </Text>
-                                </HStack>
-                                <HStack>
-                                  <Icon as={FaClock} color="blue.400" />
-                                  <Text color="white" fontWeight="bold">
-                                    {bid.estimated_time}
-                                  </Text>
-                                </HStack>
-                              </VStack>
-                              {request?.status === 'pending' && (
-                                <Button
-                                  colorScheme="brand"
-                                  size="sm"
-                                  onClick={() => acceptBid(bid.id)}
-                                >
-                                  Accept Bid
-                                </Button>
-                              )}
-                            </Stack>
-                          </Stack>
-                        </CardBody>
-                      </Card>
+                      <Box key={bid.id}>
+                        <RiderProfileCard
+                          riderName={bid.rider_name || ''}
+                          riderImage={bid.profile?.avatar_url}
+                          rating={bid.rider_rating || 0}
+                          vehicleType={bid.rider?.vehicle_type || request?.delivery_type as any || 'bike'}
+                          estimatedTime={bid.estimated_time}
+                          amount={bid.amount}
+                          bidTime={formatRelativeTime(bid.created_at)}
+                        />
+                        {request?.status === 'pending' && (
+                          <Button
+                            colorScheme="brand"
+                            size="sm"
+                            onClick={() => acceptBid(bid.id)}
+                            mt={2}
+                            width="100%"
+                          >
+                            Accept Bid
+                          </Button>
+                        )}
+                      </Box>
                     ))}
                   </VStack>
                 )}
