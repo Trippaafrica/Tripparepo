@@ -31,7 +31,7 @@ const loadGoogleMapsScript = (callback: () => void) => {
   // Create script element
   const script = document.createElement('script');
   script.id = 'google-maps-script';
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
+  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDAPCO0RO432dTqJm0tH94o3g5s-kliK9o&libraries=places';
   script.async = true;
   script.defer = true;
   
