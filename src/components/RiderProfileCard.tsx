@@ -16,7 +16,7 @@ import {
   Grid,
   GridItem
 } from '@chakra-ui/react';
-import { FaStar, FaClock, FaMotorcycle, FaTruck, FaShuttleVan, FaGasPump, FaInfoCircle, FaNairaSign } from 'react-icons/fa6';
+import { FaStar, FaClock, FaMotorcycle, FaTruck, FaShuttleVan, FaGasPump, FaInfoCircle } from 'react-icons/fa';
 
 interface RiderProfileCardProps {
   riderName: string;
