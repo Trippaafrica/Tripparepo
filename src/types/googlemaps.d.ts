@@ -45,6 +45,7 @@ declare namespace google {
       }
 
       interface PlaceResult {
+        formatted_address?: string;
         geometry?: {
           location?: {
             lat(): number;
@@ -62,6 +63,22 @@ declare namespace google {
         UNKNOWN_ERROR = 'UNKNOWN_ERROR',
         NOT_FOUND = 'NOT_FOUND'
       }
+
+      class Autocomplete {
+        constructor(
+          inputField: HTMLInputElement,
+          options?: {
+            fields?: string[];
+            types?: string[];
+          }
+        );
+        addListener(eventName: string, handler: Function): void;
+        getPlace(): PlaceResult;
+      }
+    }
+
+    namespace event {
+      function clearInstanceListeners(instance: any): void;
     }
   }
 } 
