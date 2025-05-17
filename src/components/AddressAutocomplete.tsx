@@ -48,6 +48,8 @@ const AddressAutocomplete = ({
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const mapDivRef = useRef<HTMLDivElement | null>(null);
+  const scriptLoadedRef = useRef<boolean>(false);
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -55,22 +57,35 @@ const AddressAutocomplete = ({
 
   // Load Google Maps API script
   useEffect(() => {
-    const googleMapScript = document.createElement('script');
-    googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
-    googleMapScript.async = true;
-    googleMapScript.defer = true;
-    googleMapScript.onload = initGoogleServices;
-    
     // Check if script is already loaded
-    if (!document.querySelector(`script[src*="maps.googleapis.com/maps/api"]`)) {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      initGoogleServices();
+      return;
+    }
+    
+    // Check if script is already being loaded by another component
+    if (!scriptLoadedRef.current && !document.querySelector(`script[src*="maps.googleapis.com/maps/api"]`)) {
+      const googleMapScript = document.createElement('script');
+      googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
+      googleMapScript.async = true;
+      googleMapScript.defer = true;
+      googleMapScript.onload = () => {
+        scriptLoadedRef.current = true;
+        initGoogleServices();
+      };
       document.head.appendChild(googleMapScript);
     } else {
-      initGoogleServices();
+      // If script is already being loaded, wait for it to complete
+      const checkForGoogleMaps = setInterval(() => {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          clearInterval(checkForGoogleMaps);
+          initGoogleServices();
+        }
+      }, 100);
+      
+      // Clean up interval if component unmounts
+      return () => clearInterval(checkForGoogleMaps);
     }
-
-    return () => {
-      // Cleanup if needed
-    };
   }, []);
 
   // Initialize Google services
@@ -79,11 +94,16 @@ const AddressAutocomplete = ({
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       
       // Create a dummy div for PlacesService (required by the API)
-      const mapDiv = document.createElement('div');
-      mapDiv.style.display = 'none';
-      document.body.appendChild(mapDiv);
+      // Only create it once to prevent duplicate warnings
+      if (!mapDivRef.current) {
+        mapDivRef.current = document.createElement('div');
+        mapDivRef.current.style.display = 'none';
+        document.body.appendChild(mapDivRef.current);
+      }
       
-      placesService.current = new window.google.maps.places.PlacesService(mapDiv);
+      if (mapDivRef.current) {
+        placesService.current = new window.google.maps.places.PlacesService(mapDivRef.current);
+      }
     }
   };
 
@@ -100,7 +120,7 @@ const AddressAutocomplete = ({
         {
           input: value,
           componentRestrictions: { country: 'ng' }, // Restrict to Nigeria
-          types: ['address', 'establishment', 'geocode'],
+          types: ['geocode'], // Use only 'geocode' to avoid the warning about mixing 'address' with other types
         },
         (predictions, status) => {
           setIsLoading(false);
@@ -172,6 +192,13 @@ const AddressAutocomplete = ({
   useEffect(() => {
     setInputValue(value);
   }, [value]);
+
+  // Cleanup when component unmounts
+  useEffect(() => {
+    return () => {
+      // Don't remove the mapDiv element as it might be used by other components
+    };
+  }, []);
 
   return (
     <FormControl isRequired={isRequired} isInvalid={!!error}>
