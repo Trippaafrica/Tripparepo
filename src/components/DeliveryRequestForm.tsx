@@ -111,16 +111,30 @@ const DeliveryRequestForm = () => {
         });
         return;
       }
+      
+      // Create object with just the fields needed for the database
+      const deliveryRequestData = {
+        user_id: user.id,
+        delivery_type: formData.delivery_type,
+        pickup_location: formData.pickup_address, // Renamed field for database column
+        dropoff_location: formData.dropoff_address, // Renamed field for database column
+        item_description: formData.item_description,
+        package_weight: formData.package_weight,
+        status: formData.status,
+        pickup_coordinates: formData.pickup_coordinates,
+        dropoff_coordinates: formData.dropoff_coordinates,
+        sender_name: formData.pickup_contact_name, // Renamed field for database column
+        sender_phone: formData.pickup_contact_phone, // Renamed field for database column
+        receiver_name: formData.dropoff_contact_name, // Renamed field for database column
+        receiver_phone: formData.dropoff_contact_phone, // Renamed field for database column
+      };
+      
       const { data, error } = await supabase
         .from('delivery_requests')
-        .insert([
-          {
-            user_id: user.id,
-            ...formData,
-          },
-        ])
+        .insert([deliveryRequestData])
         .select()
         .single();
+        
       if (error) {
         console.error('Error:', error);
         toast({
