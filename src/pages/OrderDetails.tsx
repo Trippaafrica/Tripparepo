@@ -84,7 +84,7 @@ const OrderDetails = () => {
       // Fetch order details
       const { data: orderData, error: orderError } = await supabase
         .from('delivery_requests')
-        .select('*, bids!inner(*)')
+        .select('*, bids!bids_delivery_request_id_fkey(*)')
         .eq('id', orderId)
         .eq('user_id', user?.id)
         .single();
