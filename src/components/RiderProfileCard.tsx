@@ -6,9 +6,10 @@ import {
   Image, 
   Icon, 
   Avatar,
-  Badge
+  Badge,
+  Tooltip
 } from '@chakra-ui/react';
-import { FaStar, FaClock, FaMotorcycle, FaTruck, FaShuttleVan, FaGasPump } from 'react-icons/fa';
+import { FaStar, FaClock, FaMotorcycle, FaTruck, FaShuttleVan, FaGasPump, FaInfoCircle } from 'react-icons/fa';
 
 interface RiderProfileCardProps {
   riderName: string;
@@ -29,6 +30,10 @@ const RiderProfileCard = ({
   amount,
   bidTime
 }: RiderProfileCardProps) => {
+  
+  // Calculate total amount (rider bid + service fee)
+  const serviceFee = 1200;
+  const totalAmount = amount + serviceFee;
   
   // Get the appropriate vehicle icon based on vehicle type
   const getVehicleIcon = () => {
@@ -101,15 +106,30 @@ const RiderProfileCard = ({
 
         {/* Bid Details */}
         <VStack align="end" spacing={1}>
+          {/* Total Amount (Bid + Service Fee) */}
           <Text fontWeight="bold" fontSize="lg" color="brand.secondary">
-            ₦{amount.toLocaleString()}
+            ₦{totalAmount.toLocaleString()}
           </Text>
+          
+          {/* Bid Amount */}
+          <HStack>
+            <Text fontSize="sm" color="gray.300">
+              Rider bid: ₦{amount.toLocaleString()}
+            </Text>
+            <Tooltip label="Service fee: ₦1,200" placement="top">
+              <span><Icon as={FaInfoCircle} color="gray.400" fontSize="xs" /></span>
+            </Tooltip>
+          </HStack>
+          
+          {/* Estimated Time */}
           <HStack>
             <Icon as={FaClock} color="blue.400" size="sm" />
             <Text fontSize="sm" color="gray.300">
               {estimatedTime}
             </Text>
           </HStack>
+          
+          {/* Bid Time */}
           <Text fontSize="xs" color="gray.400">
             Bid placed {bidTime}
           </Text>

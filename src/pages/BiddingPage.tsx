@@ -292,8 +292,12 @@ const BiddingPage = () => {
       const { error: requestUpdateError } = await supabase
         .from('delivery_requests')
         .update({ 
-          status: 'accepted'
-          // payment_status will be added back after migration is applied
+          status: 'accepted',
+          delivery_status: 'accepted',
+          order_status: 'accepted',
+          accepted_bid_id: bidId,
+          service_fee: 1200, // Add service fee
+          total_amount: bid.amount + 1200 // Calculate total amount
         })
         .eq('id', requestId)
         .eq('user_id', user?.id); // Additional safety check
