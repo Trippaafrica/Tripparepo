@@ -11,6 +11,7 @@ const deliveryTypes = [
     icon: FaMotorcycle,
     color: 'green.400',
     time: '30-60 mins',
+    link: '/delivery/bike'
   },
   {
     type: 'truck',
@@ -19,6 +20,7 @@ const deliveryTypes = [
     icon: FaTruck,
     color: 'blue.400',
     time: '2-4 hours',
+    link: '/delivery/truck'
   },
   {
     type: 'van',
@@ -27,6 +29,7 @@ const deliveryTypes = [
     icon: FaTruckMoving,
     color: 'purple.400',
     time: '1-2 hours',
+    link: '/delivery/van'
   },
   {
     type: 'fuel',
@@ -35,6 +38,7 @@ const deliveryTypes = [
     icon: FaGasPump,
     color: 'orange.400',
     time: '30-45 mins',
+    link: '/coming-soon/fuel'
   },
 ];
 
@@ -132,11 +136,11 @@ const Home = () => {
           <Box width="100%">
             <Heading size="md" mb={4} color={textColor}>Delivery Options</Heading>
             <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4} width="100%">
-              {deliveryTypes.map(({ type, title, description, icon, color, time }) => (
+              {deliveryTypes.map(({ type, title, description, icon, color, time, link }) => (
                 <Card
                   key={type}
                   as={RouterLink}
-                  to={`/delivery/${type}`}
+                  to={link}
                   bg={cardBg}
                   borderRadius="xl"
                   border="1px solid"

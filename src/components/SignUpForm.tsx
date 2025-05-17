@@ -11,6 +11,7 @@ import {
   FormErrorMessage,
 } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export function SignUpForm() {
   const [email, setEmail] = useState('');
@@ -19,6 +20,7 @@ export function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +32,7 @@ export function SignUpForm() {
       setError('');
       setLoading(true);
       await signUp(email, password);
+      navigate('/');
     } catch (error: any) {
       setError(error.message);
     } finally {

@@ -12,6 +12,8 @@ import OrderSummary from './pages/OrderSummary';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Orders from './pages/Orders';
 import Profile from './pages/Profile';
+import OrderDetails from './pages/OrderDetails';
+import ComingSoon from './pages/ComingSoon';
 
 // Protected Route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -45,6 +47,14 @@ export default function AppRoutes() {
             }
           />
           <Route
+            path="/coming-soon/fuel"
+            element={
+              <ProtectedRoute>
+                <ComingSoon />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/bidding/:requestId"
             element={
               <ProtectedRoute>
@@ -73,6 +83,14 @@ export default function AppRoutes() {
             element={
               <ProtectedRoute>
                 <Orders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order/:orderId"
+            element={
+              <ProtectedRoute>
+                <OrderDetails />
               </ProtectedRoute>
             }
           />

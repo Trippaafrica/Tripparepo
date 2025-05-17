@@ -19,6 +19,7 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { FaUser, FaPhone, FaBox } from 'react-icons/fa';
+import AddressAutocomplete from './AddressAutocomplete';
 
 interface FormData {
   delivery_type: 'bike' | 'truck' | 'van' | 'fuel';
@@ -165,8 +166,30 @@ const DeliveryRequestForm = () => {
     }));
   };
 
+  const handlePickupAddressChange = (address: string, coordinates: { lat: number; lng: number } | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      pickup_address: address,
+      pickup_coordinates: coordinates,
+    }));
+    if (errors.pickup_address) {
+      setErrors((prev) => ({ ...prev, pickup_address: undefined }));
+    }
+  };
+
+  const handleDropoffAddressChange = (address: string, coordinates: { lat: number; lng: number } | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      dropoff_address: address,
+      dropoff_coordinates: coordinates,
+    }));
+    if (errors.dropoff_address) {
+      setErrors((prev) => ({ ...prev, dropoff_address: undefined }));
+    }
+  };
+
   return (
-    <Container maxW="container.md" py={8}>
+    <Container maxW="container.md" py={8} mb={20}>
       <Box as="form" onSubmit={handleSubmit}>
         <VStack spacing={6}>
           <FormControl isRequired>
@@ -234,20 +257,14 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
-          <FormControl isRequired isInvalid={!!errors.pickup_address}>
-            <FormLabel>Pickup Address</FormLabel>
-            <Input
-              name="pickup_address"
-              value={formData.pickup_address}
-              onChange={handleChange}
-              placeholder="Enter pickup address"
-            />
-            {errors.pickup_address && (
-              <Text color="red.500" fontSize="sm" mt={1}>
-                {errors.pickup_address}
-              </Text>
-            )}
-          </FormControl>
+          <AddressAutocomplete
+            label="Pickup Address"
+            placeholder="Enter pickup address"
+            value={formData.pickup_address}
+            onChange={handlePickupAddressChange}
+            error={errors.pickup_address}
+            isRequired={true}
+          />
 
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} width="100%">
             <FormControl isRequired>
@@ -282,20 +299,14 @@ const DeliveryRequestForm = () => {
             </FormControl>
           </SimpleGrid>
 
-          <FormControl isRequired isInvalid={!!errors.dropoff_address}>
-            <FormLabel>Dropoff Address</FormLabel>
-            <Input
-              name="dropoff_address"
-              value={formData.dropoff_address}
-              onChange={handleChange}
-              placeholder="Enter dropoff address"
-            />
-            {errors.dropoff_address && (
-              <Text color="red.500" fontSize="sm" mt={1}>
-                {errors.dropoff_address}
-              </Text>
-            )}
-          </FormControl>
+          <AddressAutocomplete
+            label="Dropoff Address"
+            placeholder="Enter dropoff address"
+            value={formData.dropoff_address}
+            onChange={handleDropoffAddressChange}
+            error={errors.dropoff_address}
+            isRequired={true}
+          />
 
           <FormControl>
             <FormLabel>Package Weight (kg)</FormLabel>
@@ -310,7 +321,7 @@ const DeliveryRequestForm = () => {
 
           <Button
             type="submit"
-            colorScheme="blue"
+            colorScheme="brand"
             isLoading={isLoading}
             width="full"
             size="lg"

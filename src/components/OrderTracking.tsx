@@ -8,8 +8,10 @@ import {
   Badge,
   Progress,
   useColorModeValue,
+  Button,
 } from '@chakra-ui/react';
-import { FaBox, FaCheckCircle, FaTruck, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaBox, FaCheckCircle, FaTruck, FaMapMarkerAlt, FaArrowRight } from 'react-icons/fa';
+import { Link as RouterLink } from 'react-router-dom';
 
 interface OrderTrackingProps {
   order: {
@@ -56,11 +58,23 @@ const OrderTracking = ({ order }: OrderTrackingProps) => {
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   return (
-    <Card width="100%" bg={bgColor} border="1px solid" borderColor={borderColor}>
+    <Card 
+      width="100%" 
+      bg={bgColor} 
+      border="1px solid" 
+      borderColor={borderColor}
+      transition="all 0.2s"
+      _hover={{
+        transform: "translateY(-2px)",
+        boxShadow: "md",
+        borderColor: "brand.secondary"
+      }}
+      role="group"
+    >
       <CardBody>
         <VStack spacing={6} align="stretch">
           <HStack justify="space-between">
-            <Text fontSize="lg" fontWeight="bold">Order #{order.id}</Text>
+            <Text fontSize="lg" fontWeight="bold">Order #{order.id.slice(0, 8)}</Text>
             <Badge colorScheme={getStatusColor(order.status)} fontSize="md" px={3} py={1}>
               {order.status.replace('_', ' ').toUpperCase()}
             </Badge>
@@ -81,7 +95,7 @@ const OrderTracking = ({ order }: OrderTrackingProps) => {
                 <FaMapMarkerAlt color="green" />
                 <Text fontWeight="bold">Pickup Details</Text>
               </HStack>
-              <Text ml={6}>{order.pickup_location}</Text>
+              <Text ml={6} noOfLines={1}>{order.pickup_location}</Text>
               <HStack ml={6} mt={2} spacing={2}>
                 <Text color="gray.500">Pickup Code:</Text>
                 <Text fontWeight="bold" color="green.500">{order.pickup_code}</Text>
@@ -93,7 +107,7 @@ const OrderTracking = ({ order }: OrderTrackingProps) => {
                 <FaMapMarkerAlt color="red" />
                 <Text fontWeight="bold">Dropoff Details</Text>
               </HStack>
-              <Text ml={6}>{order.dropoff_location}</Text>
+              <Text ml={6} noOfLines={1}>{order.dropoff_location}</Text>
               <HStack ml={6} mt={2} spacing={2}>
                 <Text color="gray.500">Dropoff Code:</Text>
                 <Text fontWeight="bold" color="red.500">{order.dropoff_code}</Text>
@@ -123,6 +137,21 @@ const OrderTracking = ({ order }: OrderTrackingProps) => {
                 </HStack>
               </VStack>
             </Box>
+
+            <Button
+              as={RouterLink}
+              to={`/order/${order.id}`}
+              colorScheme="brand"
+              size="sm"
+              rightIcon={<FaArrowRight />}
+              alignSelf="flex-end"
+              mt={2}
+              opacity={{ base: 1, md: 0 }}
+              _groupHover={{ opacity: 1 }}
+              transition="all 0.2s"
+            >
+              View Details
+            </Button>
           </VStack>
         </VStack>
       </CardBody>

@@ -11,10 +11,13 @@ import {
   TabPanel,
   Spinner,
   useToast,
+  Box,
+  Link,
 } from '@chakra-ui/react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import OrderTracking from '../components/OrderTracking';
+import { Link as RouterLink } from 'react-router-dom';
 
 interface Order {
   id: string;
@@ -74,7 +77,7 @@ const Orders = () => {
   }
 
   return (
-    <Container maxW="container.md" py={8}>
+    <Container maxW="container.md" py={8} mb={20}>
       <VStack spacing={8} align="stretch">
         <Heading size="lg" color="brand.secondary">My Orders</Heading>
 
@@ -92,7 +95,14 @@ const Orders = () => {
                   <Text color="gray.500">No orders found</Text>
                 ) : (
                   orders.map(order => (
-                    <OrderTracking key={order.id} order={order} />
+                    <Box 
+                      key={order.id} 
+                      as={RouterLink} 
+                      to={`/order/${order.id}`} 
+                      _hover={{ textDecoration: 'none' }}
+                    >
+                      <OrderTracking order={order} />
+                    </Box>
                   ))
                 )}
               </VStack>
@@ -104,7 +114,14 @@ const Orders = () => {
                   <Text color="gray.500">No in-progress orders</Text>
                 ) : (
                   getFilteredOrders('in_progress').map(order => (
-                    <OrderTracking key={order.id} order={order} />
+                    <Box 
+                      key={order.id} 
+                      as={RouterLink} 
+                      to={`/order/${order.id}`}
+                      _hover={{ textDecoration: 'none' }}
+                    >
+                      <OrderTracking order={order} />
+                    </Box>
                   ))
                 )}
               </VStack>
@@ -116,7 +133,14 @@ const Orders = () => {
                   <Text color="gray.500">No completed orders</Text>
                 ) : (
                   getFilteredOrders('completed').map(order => (
-                    <OrderTracking key={order.id} order={order} />
+                    <Box 
+                      key={order.id} 
+                      as={RouterLink} 
+                      to={`/order/${order.id}`}
+                      _hover={{ textDecoration: 'none' }}
+                    >
+                      <OrderTracking order={order} />
+                    </Box>
                   ))
                 )}
               </VStack>

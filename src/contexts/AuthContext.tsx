@@ -35,18 +35,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
+      
       if (error) throw error;
-      toast({
-        title: "Success!",
-        description: "Please check your email for verification link.",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
+      
+      // If email confirmation is not enabled or the user is already confirmed
+      if (data?.user && !data.user.identities?.[0].identity_data?.email_verified) {
+        toast({
+          title: "Success!",
+          description: "Please check your email for verification link.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else if (data?.user) {
+        // User is already signed in after signup
+        toast({
+          title: "Account created!",
+          description: "You've been successfully signed up.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",

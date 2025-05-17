@@ -1,138 +1,94 @@
 import {
   Box,
-  Button,
-  Container,
-  HStack,
-  Icon,
-  Link as ChakraLink,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
+  Flex,
   Text,
+  IconButton,
+  Icon,
   useColorModeValue,
+  useColorMode,
+  HStack,
 } from '@chakra-ui/react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { FaTruck, FaUser, FaSignOutAlt, FaClipboardList } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
+import { FaMoon, FaSun, FaCar } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 
-const Navbar = () => {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const bgColor = useColorModeValue('white', 'rgba(26, 26, 46, 0.8)');
-  const borderColor = useColorModeValue('gray.200', 'rgba(157, 78, 221, 0.2)');
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+export default function Navbar() {
+  const { colorMode, toggleColorMode } = useColorMode();
+  const { user } = useAuth();
+  const location = useLocation();
+  
+  // Don't show navbar on login page
+  if (location.pathname === '/login' || location.pathname === '/register') {
+    return null;
+  }
+  
+  // Get page title based on current path
+  const getPageTitle = () => {
+    const path = location.pathname;
+    
+    if (path === '/') return 'WebTrip';
+    if (path === '/profile') return 'My Profile';
+    if (path === '/orders') return 'My Orders';
+    if (path.includes('/order-tracking')) return 'Order Tracking';
+    if (path.includes('/delivery/')) {
+      const type = path.split('/').pop();
+      return `${type?.charAt(0).toUpperCase()}${type?.slice(1)} Delivery`;
+    }
+    if (path.includes('/coming-soon')) {
+      const feature = path.split('/').pop();
+      return `${feature?.charAt(0).toUpperCase()}${feature?.slice(1)} - Coming Soon`;
+    }
+    
+    return 'WebTrip';
   };
-
+  
   return (
-    <Box
-      as="nav"
-      position="fixed"
-      w="100%"
-      bg={bgColor}
-      borderBottom="1px solid"
-      borderColor={borderColor}
-      backdropFilter="blur(10px)"
+    <Box 
+      borderBottom={1}
+      borderStyle={'solid'}
+      borderColor={useColorModeValue('gray.200', 'gray.700')}
+      bg={useColorModeValue('white', 'gray.800')}
+      position="sticky"
+      top={0}
       zIndex={1000}
-      display={{ base: 'none', md: 'block' }}
     >
-      <Container maxW="container.xl">
-        <HStack justify="space-between" h="16">
-          <ChakraLink as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
-            <HStack spacing={2}>
-              <Icon as={FaTruck} w={6} h={6} color="brand.secondary" />
-              <Text
-                fontSize="xl"
-                fontWeight="bold"
-                bgGradient="linear(to-r, brand.secondary, brand.primary)"
-                bgClip="text"
-              >
-                Trippa
-              </Text>
-            </HStack>
-          </ChakraLink>
-
-          <HStack spacing={4}>
-            {user ? (
-              <>
-                <Button
-                  as={RouterLink}
-                  to="/orders"
-                  variant="ghost"
-                  leftIcon={<Icon as={FaClipboardList} />}
-                  _hover={{
-                    bg: 'rgba(57, 255, 20, 0.1)',
-                  }}
-                >
-                  My Orders
-                </Button>
-                <Menu>
-                  <MenuButton
-                    as={Button}
-                    variant="ghost"
-                    leftIcon={<Icon as={FaUser} />}
-                    _hover={{
-                      bg: 'rgba(57, 255, 20, 0.1)',
-                    }}
-                  >
-                    {user.email}
-                  </MenuButton>
-                  <MenuList bg={bgColor} borderColor={borderColor}>
-                    <MenuItem
-                      as={RouterLink}
-                      to="/profile"
-                      icon={<Icon as={FaUser} />}
-                      _hover={{
-                        bg: 'rgba(57, 255, 20, 0.1)',
-                      }}
-                    >
-                      Profile
-                    </MenuItem>
-                    <MenuItem
-                      icon={<Icon as={FaSignOutAlt} />}
-                      onClick={handleSignOut}
-                      _hover={{
-                        bg: 'rgba(57, 255, 20, 0.1)',
-                      }}
-                    >
-                      Sign Out
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-              </>
-            ) : (
-              <>
-                <Button
-                  as={RouterLink}
-                  to="/login"
-                  variant="ghost"
-                  _hover={{
-                    bg: 'rgba(57, 255, 20, 0.1)',
-                  }}
-                >
-                  Login
-                </Button>
-                <Button
-                  as={RouterLink}
-                  to="/signup"
-                  colorScheme="brand"
-                  _hover={{
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(57, 255, 20, 0.3)',
-                  }}
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
+      <Flex
+        minH={'60px'}
+        py={{ base: 2 }}
+        px={{ base: 4 }}
+        align={'center'}
+        justify={'space-between'}
+      >
+        <Flex
+          flex={{ base: 1 }}
+          justify="center"
+          align="center"
+          position="relative"
+        >
+          <HStack spacing={2} justify="center" w="100%">
+            <Icon as={FaCar} color="brand.primary" w={6} h={6} />
+            <Text
+              textAlign="center"
+              fontWeight="bold"
+              fontSize="xl"
+              color={useColorModeValue('brand.primary', 'brand.secondary')}
+            >
+              {getPageTitle()}
+            </Text>
           </HStack>
-        </HStack>
-      </Container>
+          
+          {/* Color mode switch positioned absolutely on the right */}
+          <IconButton
+            position="absolute"
+            right={0}
+            size={'sm'}
+            icon={colorMode === 'light' ? <FaMoon /> : <FaSun />}
+            aria-label={'Toggle Color Mode'}
+            onClick={toggleColorMode}
+            variant="ghost"
+          />
+        </Flex>
+      </Flex>
     </Box>
   );
-};
-
-export default Navbar; 
+} 

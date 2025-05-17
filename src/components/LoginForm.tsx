@@ -11,6 +11,7 @@ import {
   FormErrorMessage,
 } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,7 @@ export function LoginForm() {
       setError('');
       setLoading(true);
       await signIn(email, password);
+      navigate('/');
     } catch (error: any) {
       setError(error.message);
     } finally {
