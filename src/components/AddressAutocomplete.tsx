@@ -51,45 +51,28 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [scriptError, setScriptError] = useState(false);
 
   useEffect(() => {
-    // Only load the script if Google Maps isn't already loaded
-    if (!(window as any).google?.maps?.places) {
-      setIsLoading(true);
-      
-      // Create the script element
-      const script = document.createElement('script');
-      script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDAPCO0RO432dTqJm0tH94o3g5s-kliK9o&libraries=places';
-      script.async = true;
-      script.defer = true;
-      
-      // Set up load and error handlers
-      script.onload = () => {
-        setIsLoading(false);
-        initializeAutocomplete();
-      };
-      
-      script.onerror = () => {
-        console.error('Failed to load Google Maps API');
-        setIsLoading(false);
-        setScriptError(true);
-      };
-      
-      // Add the script to the page
-      document.head.appendChild(script);
-      
-      // Clean up function for when component unmounts
-      return () => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-      };
-    } else {
-      // Google Maps already loaded, initialize autocomplete
+    // Google Maps should be already loaded from index.html
+    try {
       initializeAutocomplete();
+    } catch (error) {
+      console.error('Error accessing Google Maps API:', error);
+      setScriptError(true);
     }
+    
+    return () => {
+      // Clean up listener when component unmounts
+      if (autocompleteRef.current) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
   }, []);
 
   const initializeAutocomplete = () => {
-    if (!inputRef.current || !(window as any).google?.maps?.places) return;
+    if (!inputRef.current || !window.google?.maps?.places) {
+      console.warn("Google Maps API not available");
+      setScriptError(true);
+      return;
+    }
     
     try {
       // Initialize the autocomplete using the same approach as LocationPicker
@@ -135,6 +118,7 @@ const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             placeholder={placeholder}
             pr={isLoading ? '40px' : undefined}
             name={name}
+            data-testid={`${name}-input`}
           />
           {isLoading && (
             <Box position="absolute" right="8px" top="50%" transform="translateY(-50%)">
