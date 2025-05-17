@@ -68,6 +68,15 @@ const RiderProfileCard = ({
     }
   };
 
+  // Generate avatar color based on rider name for consistent coloring
+  const generateAvatarColor = () => {
+    // Simple hash function for the name to generate a consistent color
+    const nameHash = riderName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colorOptions = ['purple', 'blue', 'teal', 'green', 'cyan', 'orange', 'pink'];
+    const colorIndex = nameHash % colorOptions.length;
+    return colorOptions[colorIndex] + '.400';
+  };
+
   return (
     <Box 
       p={4} 
@@ -79,12 +88,11 @@ const RiderProfileCard = ({
       width="100%"
     >
       <HStack spacing={4} align="start">
-        {/* Rider Avatar and Info */}
+        {/* Rider Avatar - Use name-based avatar since images may not exist */}
         <Avatar 
           size="lg" 
           name={riderName} 
-          src={riderImage}
-          bg="brand.secondary"
+          bg={generateAvatarColor()}
         />
         
         <VStack align="start" flex={1} spacing={1}>

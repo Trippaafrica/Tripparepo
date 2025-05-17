@@ -182,9 +182,9 @@ const BiddingPage = () => {
         .select(`
           *,
           profiles:rider_id (
+            id,
             full_name,
-            rating,
-            avatar_url
+            rating
           )
         `)
         .eq('delivery_request_id', requestId);
@@ -218,9 +218,13 @@ const BiddingPage = () => {
         rider: {
           id: bid.rider_id,
           rating: bid.profiles?.rating || 4.5,
-          vehicle_type: bid.vehicle_type || 'bike'
+          vehicle_type: bid.vehicle_type || request?.delivery_type || 'bike'
         },
-        profile: bid.profiles
+        profile: {
+          id: bid.profiles?.id,
+          full_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
+          rating: bid.profiles?.rating || 4.5
+        }
       })) as Bid[];
 
       console.log('Formatted bids:', formattedBids);
@@ -483,7 +487,6 @@ const BiddingPage = () => {
                       <Box key={bid.id}>
                         <RiderProfileCard
                           riderName={bid.rider_name || ''}
-                          riderImage={bid.profile?.avatar_url}
                           rating={bid.rider_rating || 0}
                           vehicleType={bid.rider?.vehicle_type || request?.delivery_type as any || 'bike'}
                           estimatedTime={bid.estimated_time}
