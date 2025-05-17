@@ -22,10 +22,12 @@ import { Link as RouterLink } from 'react-router-dom';
 interface Order {
   id: string;
   status: string;
-  pickup_code: string;
-  dropoff_code: string;
-  pickup_location: string;
-  dropoff_location: string;
+  pickup_code?: string;
+  dropoff_code?: string;
+  pickup_location?: string;
+  dropoff_location?: string;
+  pickup_address?: string;
+  dropoff_address?: string;
   created_at: string;
 }
 
@@ -41,6 +43,7 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('delivery_requests')
         .select('*')
@@ -48,8 +51,11 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      console.log('Fetched orders:', data);
       setOrders(data || []);
     } catch (error: any) {
+      console.error('Error fetching orders:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch orders',
@@ -61,8 +67,15 @@ const Orders = () => {
     }
   };
 
-  const getFilteredOrders = (status: string) => {
-    return orders.filter(order => order.status === status);
+  const getFilteredOrders = (status: string | string[]) => {
+    if (Array.isArray(status)) {
+      return orders.filter(order => status.includes(order.status.toLowerCase()));
+    }
+    return orders.filter(order => order.status.toLowerCase() === status.toLowerCase());
+  };
+
+  const getActiveOrders = () => {
+    return getFilteredOrders(['accepted', 'in_progress']);
   };
 
   if (isLoading) {
@@ -84,7 +97,7 @@ const Orders = () => {
         <Tabs variant="enclosed" colorScheme="brand">
           <TabList>
             <Tab>All Orders</Tab>
-            <Tab>In Progress</Tab>
+            <Tab>Active</Tab>
             <Tab>Completed</Tab>
           </TabList>
 
@@ -110,10 +123,10 @@ const Orders = () => {
 
             <TabPanel>
               <VStack spacing={4} align="stretch">
-                {getFilteredOrders('in_progress').length === 0 ? (
-                  <Text color="gray.500">No in-progress orders</Text>
+                {getActiveOrders().length === 0 ? (
+                  <Text color="gray.500">No active orders</Text>
                 ) : (
-                  getFilteredOrders('in_progress').map(order => (
+                  getActiveOrders().map(order => (
                     <Box 
                       key={order.id} 
                       as={RouterLink} 

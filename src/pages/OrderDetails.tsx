@@ -161,6 +161,7 @@ const OrderDetails = () => {
   const getStatusSteps = () => {
     const steps = [
       { label: 'Order Placed', value: 'pending', completed: true },
+      { label: 'Bid Accepted', value: 'accepted', completed: ['accepted', 'assigned', 'in_progress', 'pickup_ready', 'delivering', 'completed'].includes(order?.status || '') },
       { label: 'Rider Assigned', value: 'assigned', completed: ['assigned', 'in_progress', 'pickup_ready', 'delivering', 'completed'].includes(order?.status || '') },
       { label: 'Pickup Ready', value: 'pickup_ready', completed: ['pickup_ready', 'delivering', 'completed'].includes(order?.status || '') },
       { label: 'Delivering', value: 'delivering', completed: ['delivering', 'completed'].includes(order?.status || '') },
@@ -172,10 +173,11 @@ const OrderDetails = () => {
   const getProgressValue = () => {
     const status = order?.status || '';
     switch (status) {
-      case 'pending': return 20;
-      case 'assigned': return 40;
-      case 'pickup_ready': return 60;
-      case 'delivering': return 80;
+      case 'pending': return 16;
+      case 'accepted': return 32;
+      case 'assigned': return 48;
+      case 'pickup_ready': return 64;
+      case 'delivering': return 82;
       case 'completed': return 100;
       default: return 0;
     }
@@ -185,6 +187,7 @@ const OrderDetails = () => {
     const status = order?.status || '';
     switch (status) {
       case 'pending': return 'yellow';
+      case 'accepted': return 'blue';
       case 'assigned': return 'blue';
       case 'pickup_ready': return 'teal';
       case 'delivering': return 'purple';
