@@ -112,15 +112,15 @@ const DeliveryRequestForm = () => {
       const deliveryRequestData = {
         user_id: user.id,
         delivery_type: formData.delivery_type,
-        pickup_location: formData.pickup_address, // Renamed field for database column
-        dropoff_location: formData.dropoff_address, // Renamed field for database column
+        pickup_address: formData.pickup_address,
+        dropoff_address: formData.dropoff_address,
         item_description: formData.item_description,
         package_weight: formData.package_weight,
         status: formData.status,
-        sender_name: formData.pickup_contact_name, // Renamed field for database column
-        sender_phone: formData.pickup_contact_phone, // Renamed field for database column
-        receiver_name: formData.dropoff_contact_name, // Renamed field for database column
-        receiver_phone: formData.dropoff_contact_phone, // Renamed field for database column
+        sender_name: formData.pickup_contact_name,
+        sender_phone: formData.pickup_contact_phone,
+        receiver_name: formData.dropoff_contact_name,
+        receiver_phone: formData.dropoff_contact_phone,
       };
       
       const { data, error } = await supabase
