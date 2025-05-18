@@ -1,7 +1,10 @@
-import { Box, Container, Heading, SimpleGrid, VStack, Text, Button, Icon, useColorModeValue, Image, Card, CardBody, Avatar, HStack, Flex, Badge } from '@chakra-ui/react';
+import { Box, Container, Heading, SimpleGrid, VStack, Text, Button, Icon, useColorModeValue, Image, Card, CardBody, Avatar, HStack, Flex, Badge, Spinner } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaMotorcycle, FaTruck, FaTruckMoving, FaGasPump, FaMapMarkerAlt, FaArrowRight } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { supabase } from '../services/supabase';
+import OrderTracking from '../components/OrderTracking';
 
 const deliveryTypes = [
   {
@@ -49,12 +52,54 @@ const recentLocations = [
   'Lekki Phase 1, Lagos',
 ];
 
+interface Order {
+  id: string;
+  status: string;
+  pickup_code?: string;
+  dropoff_code?: string;
+  pickup_location?: string;
+  dropoff_location?: string;
+  pickup_address?: string;
+  dropoff_address?: string;
+  created_at: string;
+}
+
 const Home = () => {
   const { user } = useAuth();
   const cardBg = useColorModeValue('white', 'rgba(26, 26, 46, 0.8)');
   const cardBorder = useColorModeValue('gray.200', 'rgba(157, 78, 221, 0.2)');
   const textColor = useColorModeValue('gray.800', 'gray.100');
   const descriptionColor = useColorModeValue('gray.600', 'gray.400');
+  
+  const [activeOrders, setActiveOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      fetchActiveOrders();
+    }
+  }, [user]);
+
+  const fetchActiveOrders = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('delivery_requests')
+        .select('*')
+        .eq('user_id', user?.id)
+        .in('status', ['pending', 'accepted', 'picked_up', 'in_transit'])
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      console.log('Fetched active orders:', data);
+      setActiveOrders(data || []);
+    } catch (error: any) {
+      console.error('Error fetching active orders:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <Box mb={20}>
@@ -198,37 +243,53 @@ const Home = () => {
                 </Button>
               </HStack>
               
-              <Card bg={cardBg} borderRadius="xl" border="1px solid" borderColor={cardBorder}>
-                <CardBody p={4}>
-                  <VStack spacing={4} align="stretch">
-                    <HStack justifyContent="space-between">
-                      <Badge colorScheme="blue">In Progress</Badge>
-                      <Text fontSize="sm" color={descriptionColor}>Order #12345</Text>
-                    </HStack>
-                    
-                    <VStack align="stretch" spacing={1}>
-                      <HStack>
-                        <Icon as={FaMapMarkerAlt} color="green.500" />
-                        <Text fontSize="sm" isTruncated>123 Main Street, Lagos</Text>
-                      </HStack>
-                      <HStack>
-                        <Icon as={FaMapMarkerAlt} color="red.500" />
-                        <Text fontSize="sm" isTruncated>456 Market Road, Lagos</Text>
-                      </HStack>
+              {isLoading ? (
+                <VStack py={4}>
+                  <Spinner size="lg" color="brand.secondary" />
+                  <Text>Loading orders...</Text>
+                </VStack>
+              ) : activeOrders.length === 0 ? (
+                <Card bg={cardBg} borderRadius="xl" border="1px solid" borderColor={cardBorder}>
+                  <CardBody p={4}>
+                    <VStack spacing={4} align="center">
+                      <Text color={descriptionColor}>No active orders found</Text>
+                      <Button 
+                        as={RouterLink} 
+                        to="/delivery/bike" 
+                        size="sm" 
+                        colorScheme="brand"
+                      >
+                        Start a Delivery
+                      </Button>
                     </VStack>
-                    
+                  </CardBody>
+                </Card>
+              ) : (
+                <VStack spacing={4} align="stretch">
+                  {activeOrders.slice(0, 3).map(order => (
+                    <Box 
+                      key={order.id} 
+                      as={RouterLink} 
+                      to={`/order/${order.id}`}
+                      _hover={{ textDecoration: 'none' }}
+                    >
+                      <OrderTracking order={order} />
+                    </Box>
+                  ))}
+                  {activeOrders.length > 3 && (
                     <Button 
                       as={RouterLink} 
                       to="/orders" 
                       size="sm" 
                       colorScheme="brand"
-                      width="100%"
+                      variant="outline"
+                      alignSelf="center"
                     >
-                      Track Order
+                      View {activeOrders.length - 3} more active orders
                     </Button>
-                  </VStack>
-                </CardBody>
-              </Card>
+                  )}
+                </VStack>
+              )}
             </Box>
           )}
         </VStack>
