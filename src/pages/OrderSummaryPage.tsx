@@ -171,8 +171,35 @@ const OrderSummaryPage = () => {
 
   const handlePaymentClick = () => {
     if (deliveryRequest && acceptedBid) {
-      // Navigate to payment page with necessary details
-      navigate(`/payment/${requestId}/${bidId}`);
+      try {
+        // Calculate total amount
+        const totalAmount = acceptedBid.amount + 1200; // Rider fee + service fee
+        
+        // Generate a unique reference
+        const reference = `TRIPPA-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+        
+        // Store reference and order details in localStorage for verification
+        localStorage.setItem('paystack_reference', reference);
+        localStorage.setItem('paystack_amount', totalAmount.toString());
+        localStorage.setItem('paystack_request_id', requestId || '');
+        localStorage.setItem('paystack_bid_id', bidId || '');
+        
+        console.log('Redirecting to Paystack with reference:', reference);
+        
+        // Direct redirect to Paystack checkout page
+        const paystackURL = `https://checkout.paystack.com/023a80793215431bdc8c277e9591b024005202a5/payment?email=${encodeURIComponent(user?.email || '')}&amount=${totalAmount * 100}&ref=${reference}&callback_url=${encodeURIComponent('https://newtrippaf.netlify.app/orders')}`;
+        
+        // Redirect to Paystack
+        window.location.href = paystackURL;
+      } catch (error) {
+        console.error('Error redirecting to payment:', error);
+        toast({
+          title: 'Payment Error',
+          description: 'Failed to initialize payment. Please try again.',
+          status: 'error',
+          duration: 5000,
+        });
+      }
     }
   };
 
