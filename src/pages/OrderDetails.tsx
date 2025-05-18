@@ -82,73 +82,141 @@ const OrderDetails = () => {
     try {
       if (!orderId) return;
 
-      // Fetch order details
+      setLoading(true);
+      console.log('Fetching order details for order ID:', orderId);
+
+      // First try to get from delivery_orders
       const { data: orderData, error: orderError } = await supabase
-        .from('delivery_requests')
-        .select('*, bids!bids_delivery_request_id_fkey(*)')
+        .from('delivery_orders')
+        .select(`
+          *,
+          delivery_requests(*),
+          bids(*),
+          riders(*)
+        `)
         .eq('id', orderId)
-        .eq('user_id', user?.id)
         .single();
 
-      if (orderError) throw orderError;
-      
-      if (!orderData) {
-        toast({
-          title: 'Order not found',
-          status: 'error',
-          duration: 3000,
-        });
-        navigate('/orders');
-        return;
-      }
+      if (!orderError && orderData) {
+        console.log('Found order in delivery_orders:', orderData);
+        
+        // Get the associated request for additional details
+        const deliveryRequest = orderData.delivery_requests;
+        const bidData = orderData.bids;
+        const riderData = orderData.riders;
+        
+        // Transform data for our component
+        const transformedOrder: OrderDetails = {
+          id: orderData.id,
+          delivery_type: deliveryRequest?.delivery_type || 'standard',
+          pickup_address: orderData.pickup_location,
+          dropoff_address: orderData.delivery_location,
+          status: orderData.status,
+          package_weight: deliveryRequest?.package_weight,
+          pickup_contact_name: deliveryRequest?.pickup_contact_name,
+          pickup_contact_phone: deliveryRequest?.pickup_contact_phone,
+          dropoff_contact_name: deliveryRequest?.dropoff_contact_name,
+          dropoff_contact_phone: deliveryRequest?.dropoff_contact_phone,
+          item_description: deliveryRequest?.item_description,
+          pickup_code: orderData.pickup_code || 'PU1234', // Fallback for demo
+          dropoff_code: orderData.dropoff_code || 'DO5678', // Fallback for demo
+          created_at: orderData.created_at,
+          distance_km: deliveryRequest?.estimated_distance_km || 5.3,
+          estimated_time: bidData?.estimated_time || '30-45 mins',
+          amount: orderData.amount,
+        };
 
-      // Transform data for our component
-      const transformedOrder: OrderDetails = {
-        id: orderData.id,
-        delivery_type: orderData.delivery_type,
-        pickup_address: orderData.pickup_location,
-        dropoff_address: orderData.dropoff_location,
-        status: orderData.status,
-        package_weight: orderData.package_weight,
-        pickup_contact_name: orderData.sender_name,
-        pickup_contact_phone: orderData.sender_phone,
-        dropoff_contact_name: orderData.receiver_name,
-        dropoff_contact_phone: orderData.receiver_phone,
-        item_description: orderData.item_description,
-        pickup_code: orderData.pickup_code || 'PU1234', // Fallback for demo
-        dropoff_code: orderData.dropoff_code || 'DO5678', // Fallback for demo
-        created_at: orderData.created_at,
-        distance_km: 5.3, // Example value, replace with actual data when available
-        estimated_time: orderData.bids?.[0]?.estimated_time || '30-45 mins',
-        amount: orderData.bids?.[0]?.amount || 0,
-      };
+        setOrder(transformedOrder);
 
-      setOrder(transformedOrder);
-
-      // Fetch rider details if assigned
-      if (orderData.rider_id) {
-        const { data: riderData, error: riderError } = await supabase
-          .from('riders')
-          .select('*')
-          .eq('id', orderData.rider_id)
-          .single();
-
-        if (!riderError && riderData) {
-          setRider(riderData);
+        // Set rider details if available
+        if (riderData) {
+          setRider({
+            id: riderData.id,
+            full_name: riderData.full_name || 'Unknown Rider',
+            phone_number: riderData.phone_number || '+2349012345678',
+            rating: riderData.rating || 4.5,
+            avatar_url: riderData.avatar_url,
+            vehicle_type: riderData.vehicle_type || 'Motorcycle',
+            vehicle_number: riderData.vehicle_number || 'LG-234-KJA',
+          });
         }
       } else {
-        // Demo rider for testing
-        setRider({
-          id: '123',
-          full_name: 'John Rider',
-          phone_number: '+2349012345678',
-          rating: 4.8,
-          vehicle_type: 'Motorcycle',
-          vehicle_number: 'LG-234-KJA',
-        });
+        console.log('Order not found in delivery_orders, checking delivery_requests');
+        
+        // Fallback to checking delivery_requests directly
+        const { data: requestData, error: requestError } = await supabase
+          .from('delivery_requests')
+          .select(`
+            *,
+            bids(*)
+          `)
+          .eq('id', orderId)
+          .eq('user_id', user?.id)
+          .single();
+
+        if (requestError) throw requestError;
+        
+        if (!requestData) {
+          toast({
+            title: 'Order not found',
+            status: 'error',
+            duration: 3000,
+          });
+          navigate('/orders');
+          return;
+        }
+
+        console.log('Found order in delivery_requests:', requestData);
+        
+        // Find the accepted bid if any
+        const acceptedBid = requestData.bids?.find(bid => bid.status === 'accepted');
+        
+        // Transform data for our component
+        const transformedOrder: OrderDetails = {
+          id: requestData.id,
+          delivery_type: requestData.delivery_type,
+          pickup_address: requestData.pickup_address,
+          dropoff_address: requestData.dropoff_address,
+          status: requestData.status,
+          package_weight: requestData.package_weight,
+          pickup_contact_name: requestData.pickup_contact_name,
+          pickup_contact_phone: requestData.pickup_contact_phone,
+          dropoff_contact_name: requestData.dropoff_contact_name,
+          dropoff_contact_phone: requestData.dropoff_contact_phone,
+          item_description: requestData.item_description,
+          pickup_code: requestData.pickup_code || 'PU1234', // Fallback for demo
+          dropoff_code: requestData.dropoff_code || 'DO5678', // Fallback for demo
+          created_at: requestData.created_at,
+          distance_km: requestData.estimated_distance_km || 5.3,
+          estimated_time: acceptedBid?.estimated_time || '30-45 mins',
+          amount: acceptedBid?.amount || 0,
+        };
+
+        setOrder(transformedOrder);
+
+        // Fetch rider details if assigned
+        if (acceptedBid?.rider_id) {
+          const { data: riderData, error: riderError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', acceptedBid.rider_id)
+            .single();
+
+          if (!riderError && riderData) {
+            setRider({
+              id: riderData.id,
+              full_name: riderData.full_name || 'Unknown Rider',
+              phone_number: riderData.phone_number || '+2349012345678',
+              rating: riderData.rating || 4.5,
+              avatar_url: riderData.avatar_url,
+              vehicle_type: riderData.vehicle_type || 'Motorcycle',
+              vehicle_number: riderData.vehicle_number || 'LG-234-KJA',
+            });
+          }
+        }
       }
     } catch (error: any) {
-      console.error(error);
+      console.error('Error fetching order details:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch order details',
@@ -414,15 +482,21 @@ const OrderDetails = () => {
                 </VStack>
               </Box>
               
-              {order.package_weight && (
-                <>
-                  <Divider />
-                  <HStack>
-                    <Icon as={FaMoneyBillWave} color="blue.500" />
-                    <Text>Package Weight: {order.package_weight}kg</Text>
-                  </HStack>
-                </>
-              )}
+              {/* Package Details */}
+              <Box>
+                <HStack spacing={2} mb={2} align="center">
+                  <Icon as={FaMoneyBillWave} color="blue.500" />
+                  <Text fontWeight="bold">Package Details</Text>
+                </HStack>
+                {order.item_description && (
+                  <Text ml={6} mb={2}><b>Description:</b> {order.item_description}</Text>
+                )}
+                {order.package_weight && (
+                  <Text ml={6} mb={2}><b>Weight:</b> {order.package_weight}kg</Text>
+                )}
+              </Box>
+              
+              <Divider />
             </VStack>
           </CardBody>
         </Card>
