@@ -28,6 +28,35 @@ import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { FaCreditCard, FaShieldAlt, FaLock, FaMapMarkerAlt } from 'react-icons/fa';
 
+// Add TypeScript declaration for PaystackPop to global Window interface
+declare global {
+  interface Window {
+    PaystackPop: {
+      setup: (options: {
+        key: string;
+        email: string;
+        amount: number;
+        currency: string;
+        ref: string;
+        firstname?: string;
+        lastname?: string;
+        phone?: string;
+        metadata?: {
+          custom_fields: Array<{
+            display_name: string;
+            variable_name: string;
+            value: string;
+          }>
+        };
+        callback: (response: { reference: string }) => void;
+        onClose: () => void;
+      }) => {
+        openIframe: () => void;
+      };
+    };
+  }
+}
+
 interface DeliveryRequest {
   id: string;
   status: string;
@@ -212,27 +241,72 @@ const PaymentPage = () => {
     try {
       setIsProcessing(true);
       
-      // Use a Paystack test public key
-      const paystackPublicKey = "pk_test_b1c4c2a2b8d6b581b7b2b4f2b3c0c1c2b8d6b581";
+      // Use the Paystack live public key
+      const paystackPublicKey = "pk_live_023a80793215431bdc8c277e9591b024005202a5";
       // Calculate total directly, don't rely on fields that might not exist
       const totalAmount = acceptedBid.amount + 1200; // rider fee + service fee
       
       console.log('Initializing payment for amount:', totalAmount);
       
-      // For testing purposes, we'll just simulate a successful payment
-      // In a real implementation, we would use the Paystack library
-      setTimeout(() => {
-        // Set redirect URL for callback after payment
-        localStorage.setItem('paystack_callback_url', 'https://newtrippaf.netlify.app/payment/success');
+      // Check if PaystackPop is available
+      if (window.PaystackPop) {
+        const paystack = window.PaystackPop.setup({
+          key: paystackPublicKey,
+          email: formData.email,
+          amount: totalAmount * 100, // Convert to kobo (or cents)
+          currency: 'NGN',
+          ref: `TRIPPA-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          firstname: formData.fullName.split(' ')[0],
+          lastname: formData.fullName.split(' ').slice(1).join(' '),
+          phone: formData.phone,
+          metadata: {
+            custom_fields: [
+              {
+                display_name: "Delivery Request ID",
+                variable_name: "delivery_request_id",
+                value: deliveryRequest.id
+              },
+              {
+                display_name: "Bid ID",
+                variable_name: "bid_id",
+                value: acceptedBid.id
+              }
+            ]
+          },
+          callback: function(response: any) {
+            // Handle the successful payment
+            console.log('Payment successful. Reference:', response.reference);
+            handlePaymentSuccess(response.reference);
+          },
+          onClose: function() {
+            // Handle the case when the user closes the payment modal
+            console.log('Payment window closed');
+            setIsProcessing(false);
+            toast({
+              title: 'Payment Cancelled',
+              description: 'You have cancelled the payment process',
+              status: 'info',
+              duration: 5000,
+            });
+          }
+        });
+        paystack.openIframe();
+      } else {
+        // Fallback if Paystack is not loaded
+        console.error('Paystack not available. Redirecting to external payment page.');
         
-        // Generate a random reference number for the transaction
-        const reference = `PAY-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
-        console.log('Payment reference:', reference);
+        // Generate a unique reference
+        const reference = `TRIPPA-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
         
-        // Call the success handler with the reference
-        handlePaymentSuccess(reference);
-      }, 2000);
-      
+        // Store the reference in localStorage for verification on return
+        localStorage.setItem('paystack_reference', reference);
+        localStorage.setItem('paystack_amount', totalAmount.toString());
+        localStorage.setItem('paystack_request_id', deliveryRequest.id);
+        localStorage.setItem('paystack_bid_id', acceptedBid.id);
+        
+        // Redirect to payment page
+        window.location.href = `https://checkout.paystack.com/023a80793215431bdc8c277e9591b024005202a5/payment?email=${encodeURIComponent(formData.email)}&amount=${totalAmount * 100}&ref=${reference}`;
+      }
     } catch (error: any) {
       console.error('Error initializing payment:', error);
       setIsProcessing(false);
