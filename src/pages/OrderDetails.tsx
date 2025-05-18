@@ -148,13 +148,16 @@ const OrderDetails = () => {
           .from('delivery_requests')
           .select(`
             *,
-            bids(*)
+            bids!bids_delivery_request_id_fkey(*)
           `)
           .eq('id', orderId)
           .eq('user_id', user?.id)
           .single();
 
-        if (requestError) throw requestError;
+        if (requestError) {
+          console.error('Error fetching delivery request:', requestError);
+          throw requestError;
+        }
         
         if (!requestData) {
           toast({
