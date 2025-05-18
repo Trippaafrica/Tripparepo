@@ -110,12 +110,15 @@ const BiddingPage = () => {
 
   useEffect(() => {
     if (request) {
+      // Initial fetch of bids
       fetchBids();
       calculateRouteInfo();
 
-      // Subscribe to new bids
+      console.log('Setting up realtime subscription for bid updates on request:', requestId);
+      
+      // Setup Supabase realtime subscription with improved logging
       const subscription = supabase
-        .channel(`bids-${requestId}`) // Use a unique channel name
+        .channel(`bids-channel-${requestId}`)
         .on('postgres_changes', 
           { 
             event: 'INSERT', 
@@ -124,27 +127,39 @@ const BiddingPage = () => {
             filter: `delivery_request_id=eq.${requestId}`
           }, 
           (payload) => {
-            console.log('New bid received:', payload);
+            console.log('🔔 Realtime notification received:', payload);
+            // Force refresh bids when we get a notification
             fetchBids();
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log(`Subscription status for bids-channel-${requestId}:`, status);
+        });
 
-      // Add polling at a much slower rate to reduce API calls
-      const pollingInterval = setInterval(() => {
-        // Only poll if there are no bids yet or if status is still pending
+      // More frequent polling for debugging purposes - remove in production
+      const shortPollingInterval = setInterval(() => {
         if (bids.length === 0 || request.status === 'pending') {
-          console.log('Polling for new bids...');
+          console.log('Short polling interval: Checking for new bids...');
           fetchBids();
         }
-      }, 30000); // Poll every 30 seconds instead of 10
+      }, 15000); // Every 15 seconds
+
+      // Regular polling as a backup
+      const pollingInterval = setInterval(() => {
+        if (bids.length === 0 || request.status === 'pending') {
+          console.log('Regular polling: Checking for new bids...');
+          fetchBids();
+        }
+      }, 45000); // Every 45 seconds
 
       return () => {
+        console.log('Cleaning up bid subscriptions');
         subscription.unsubscribe();
+        clearInterval(shortPollingInterval);
         clearInterval(pollingInterval);
       };
     }
-  }, [request, bids.length, requestId]);
+  }, [request, requestId]);
 
   const calculateRouteInfo = async () => {
     // Only calculate if we don't already have the values
@@ -275,6 +290,19 @@ const BiddingPage = () => {
         throw new Error('No request ID provided');
       }
 
+      // Diagnostic query - log all bids in the system for debugging
+      const { data: allBidsData, error: allBidsError } = await supabase
+        .from('bids')
+        .select('id, rider_id, delivery_request_id, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (allBidsError) {
+        console.error('Error querying all bids:', allBidsError);
+      } else {
+        console.log('Latest 10 bids in system:', allBidsData);
+      }
+
       // Skip verification if we already have the request
       if (!request) {
         // Verify that the user has access to this delivery request
@@ -295,6 +323,28 @@ const BiddingPage = () => {
 
         if (requestData.user_id !== user?.id) {
           throw new Error('You do not have permission to view these bids');
+        }
+      }
+
+      // Diagnostic check - get all bids for this request regardless of status
+      const { data: allRequestBids, error: allRequestBidsError } = await supabase
+        .from('bids')
+        .select('id, status, created_at')
+        .eq('delivery_request_id', requestId);
+      
+      if (allRequestBidsError) {
+        console.error('Error checking all bids for this request:', allRequestBidsError);
+      } else {
+        console.log('All bids for this request:', allRequestBids);
+        
+        if (allRequestBids && allRequestBids.length > 0) {
+          const statusCounts = allRequestBids.reduce((acc: any, bid: any) => {
+            acc[bid.status] = (acc[bid.status] || 0) + 1;
+            return acc;
+          }, {});
+          console.log('Bid status counts:', statusCounts);
+        } else {
+          console.log('No bids found for this request at all');
         }
       }
 
