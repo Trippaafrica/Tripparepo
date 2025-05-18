@@ -369,8 +369,8 @@ const OrderDetails = () => {
           </CardBody>
         </Card>
 
-        {/* Rider Details - Only show if status is accepted or more advanced */}
-        {rider && ['accepted', 'picked_up', 'in_transit', 'delivered'].includes(order?.status) && (
+        {/* Rider Details - Always show if rider data exists */}
+        {rider && (
           <Card bg={bgColor} border="1px solid" borderColor={borderColor}>
             <CardBody p={4}>
               <VStack spacing={4} align="stretch">
@@ -519,23 +519,15 @@ const OrderDetails = () => {
         </Card>
         
         {/* Action Buttons */}
-        <Flex gap={4} wrap="wrap">
+        <Flex>
           <Button
             leftIcon={<FaPhone />}
             colorScheme="brand"
-            flex={1}
+            width="100%"
             onClick={callRider}
             isDisabled={!rider}
           >
             Contact Rider
-          </Button>
-          <Button
-            colorScheme="red"
-            variant="outline"
-            flex={1}
-            isDisabled={['completed', 'cancelled'].includes(order.status)}
-          >
-            Cancel Order
           </Button>
         </Flex>
       </VStack>
