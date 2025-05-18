@@ -372,8 +372,8 @@ const OrderDetails = () => {
           </CardBody>
         </Card>
 
-        {/* Rider Details - Only show if rider is assigned or status is more advanced */}
-        {rider && ['assigned', 'in_progress', 'pickup_ready', 'delivering', 'completed'].includes(order?.status) && (
+        {/* Rider Details - Only show if status is accepted or more advanced */}
+        {rider && ['accepted', 'assigned', 'in_progress', 'pickup_ready', 'delivering', 'completed'].includes(order?.status) && (
           <Card bg={bgColor} border="1px solid" borderColor={borderColor}>
             <CardBody p={4}>
               <VStack spacing={4} align="stretch">
