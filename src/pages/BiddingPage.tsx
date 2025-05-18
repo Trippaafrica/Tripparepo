@@ -484,12 +484,15 @@ const BiddingPage = () => {
 
       console.log('Successfully updated bid status');
 
-      // Update delivery request status - removed rider_id which doesn't exist in the schema
+      // Get the bid amount for request update
+      const bidAmount = typeof bid.amount === 'number' ? bid.amount : parseFloat(bid.amount) || 0;
+
+      // Update only the status field in delivery_requests table
       const { data: requestUpdateData, error: requestUpdateError } = await supabase
         .from('delivery_requests')
         .update({ 
           status: 'accepted'
-          // Removed rider_id field which doesn't exist in schema
+          // No additional fields - staying minimal to avoid schema errors
         })
         .eq('id', requestId)
         .eq('user_id', user?.id) // Additional safety check
