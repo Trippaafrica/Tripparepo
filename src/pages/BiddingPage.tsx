@@ -530,12 +530,7 @@ const BiddingPage = () => {
           console.error('Error creating delivery order:', orderError);
           console.error('Order creation error details:', orderError.message, orderError.details, orderError.hint);
           // Don't throw here, as the main operation has succeeded
-          toast({
-            title: 'Warning',
-            description: 'Bid accepted, but there was an issue creating the delivery order record.',
-            status: 'warning',
-            duration: 5000,
-          });
+          // Silent failure - don't show error toast to user
         } else {
           console.log('Successfully created delivery order record:', orderData);
         }
