@@ -257,7 +257,6 @@ const BiddingPage = () => {
           delivery_request_id,
           rider_id,
           amount,
-          estimated_time,
           status,
           created_at,
           profiles:rider_id (
@@ -281,7 +280,7 @@ const BiddingPage = () => {
         delivery_request_id: bid.delivery_request_id,
         rider_id: bid.rider_id,
         amount: typeof bid.amount === 'number' ? bid.amount : parseFloat(bid.amount) || 0,
-        estimated_time: bid.estimated_time || '30 minutes',
+        estimated_time: '30-45 minutes', // Default estimation
         status: bid.status,
         created_at: bid.created_at,
         rider_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),

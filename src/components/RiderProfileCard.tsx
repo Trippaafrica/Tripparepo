@@ -23,7 +23,7 @@ interface RiderProfileCardProps {
   riderImage?: string;
   rating: number;
   vehicleType: 'bike' | 'truck' | 'van' | 'fuel';
-  estimatedTime: string;
+  estimatedTime?: string;
   amount: number;
   bidTime: string;
 }
@@ -33,7 +33,7 @@ const RiderProfileCard = ({
   riderImage,
   rating,
   vehicleType,
-  estimatedTime,
+  estimatedTime = '30-45 minutes',
   amount,
   bidTime
 }: RiderProfileCardProps) => {
