@@ -163,17 +163,13 @@ const BiddingPage = () => {
           console.log(`Subscription status for delivery request channel:`, status);
         });
 
-      // More frequent polling for debugging purposes - remove in production
-      const shortPollingInterval = setInterval(() => {
-        console.log('Short polling interval: Checking for new bids...');
-        fetchBids();
-      }, 10000); // Every 10 seconds
+      // Remove the automatic polling - keep only the realtime subscriptions
+      // and manual refresh button
 
       return () => {
         console.log('Cleaning up bid subscriptions');
         subscription.unsubscribe();
         requestSubscription.unsubscribe();
-        clearInterval(shortPollingInterval);
       };
     }
   }, [request, requestId]);
