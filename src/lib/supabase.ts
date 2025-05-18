@@ -17,7 +17,10 @@ export const supabase = (() => {
   supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
-      storageKey: 'trippa-auth-storage'
+      storageKey: 'trippa-auth-storage',
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: localStorage
     }
   });
   
