@@ -205,10 +205,10 @@ const OrderSummaryPage = () => {
     );
   }
 
-  // Calculate total amount if not already set
+  // Calculate total amount
   const bidAmount = acceptedBid.amount;
   const serviceFee = 1200; // Fixed service fee of 1200 naira
-  const totalAmount = bidAmount + serviceFee; // Always calculate as bid amount + service fee
+  const totalAmount = bidAmount + serviceFee; // Calculate as bid amount + service fee
 
   return (
     <Container maxW="container.md" py={8}>

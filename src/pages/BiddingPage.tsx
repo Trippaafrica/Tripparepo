@@ -512,29 +512,20 @@ const BiddingPage = () => {
 
       // Create a delivery order record
       try {
-        // Generate tracking codes
-        const pickupCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-        const dropoffCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-        
         // Create an order record
         const { data: orderData, error: orderError } = await supabase
           .from('delivery_orders') // Using delivery_orders table
           .insert({
             delivery_request_id: requestId,
-            user_id: user?.id,
             rider_id: bid.rider_id,
             bid_id: bidId,
             amount: bidAmount,
-            service_fee: 1200, // Fixed service fee of 1200 naira
-            total_amount: bidAmount + 1200, // Total is bid amount + service fee
             status: 'accepted',
-            pickup_code: pickupCode,
-            dropoff_code: dropoffCode,
-            estimated_time: bid.estimated_time || '30-40 minutes',
-            pickup_address: requestData.pickup_address,
-            dropoff_address: requestData.dropoff_address,
-            item_description: requestData.item_description,
-            rider_name: 'Trippa Rider' // Only keep rider_name which likely exists
+            pickup_location: requestData.pickup_address,
+            delivery_location: requestData.dropoff_address,
+            delivery_status: 'pending'
+            // Removed non-existent fields: service_fee, total_amount, pickup_code, dropoff_code, 
+            // estimated_time, item_description, rider_name
           })
           .select()
           .single();

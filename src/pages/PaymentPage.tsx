@@ -123,7 +123,7 @@ const PaymentPage = () => {
       // Fetch the delivery request
       const { data: requestData, error: requestError } = await supabase
         .from('delivery_requests')
-        .select('id, status, delivery_type, pickup_address, dropoff_address, user_id, service_fee, total_amount')
+        .select('id, status, delivery_type, pickup_address, dropoff_address, user_id, service_fee')
         .eq('id', requestId)
         .single();
 
@@ -214,7 +214,8 @@ const PaymentPage = () => {
       
       // Use a Paystack test public key
       const paystackPublicKey = "pk_test_b1c4c2a2b8d6b581b7b2b4f2b3c0c1c2b8d6b581";
-      const totalAmount = deliveryRequest.total_amount || (acceptedBid.amount + (deliveryRequest.service_fee || 1200));
+      // Calculate total directly, don't rely on fields that might not exist
+      const totalAmount = acceptedBid.amount + 1200; // rider fee + service fee
       
       console.log('Initializing payment for amount:', totalAmount);
       
@@ -323,10 +324,10 @@ const PaymentPage = () => {
     );
   }
 
-  // Calculate total amount if not already set
+  // Calculate total amount directly instead of using fields that don't exist
   const bidAmount = acceptedBid.amount;
-  const serviceFee = deliveryRequest.service_fee || 1200;
-  const totalAmount = deliveryRequest.total_amount || (bidAmount + serviceFee);
+  const serviceFee = 1200; // Fixed service fee
+  const totalAmount = bidAmount + serviceFee;
 
   return (
     <Container maxW="container.md" py={8}>
@@ -386,13 +387,13 @@ const PaymentPage = () => {
                       </Flex>
                       <Flex justify="space-between">
                         <Text color="gray.300">Service Fee:</Text>
-                        <Text color="white">₦{(deliveryRequest.service_fee || 1200).toLocaleString()}</Text>
+                        <Text color="white">₦{serviceFee.toLocaleString()}</Text>
                       </Flex>
                       <Divider my={1} />
                       <Flex justify="space-between">
                         <Text color="white" fontWeight="bold">Total:</Text>
                         <Text color="brand.secondary" fontWeight="bold">
-                          ₦{((deliveryRequest.total_amount || 0) || (acceptedBid.amount + (deliveryRequest.service_fee || 1200))).toLocaleString()}
+                          ₦{totalAmount.toLocaleString()}
                         </Text>
                       </Flex>
                     </VStack>
