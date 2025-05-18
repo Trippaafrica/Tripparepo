@@ -731,13 +731,21 @@ const BiddingPage = () => {
                       <Button
                         size="sm"
                         leftIcon={<FaSync />}
-                        variant="outline"
+                        variant="solid"
                         colorScheme="brand"
                         onClick={handleManualRefresh}
                         isLoading={isLoading}
                         loadingText="Refreshing"
+                        rounded="full"
+                        px={4}
+                        shadow="md"
+                        _hover={{
+                          transform: 'translateY(-2px)',
+                          shadow: 'lg',
+                        }}
+                        transition="all 0.2s"
                       >
-                        Refresh
+                        Refresh Bids
                       </Button>
                     )}
                     
@@ -800,6 +808,30 @@ const BiddingPage = () => {
                       Your delivery request has been sent to nearby riders.
                       <br />Bids should start appearing soon.
                     </Text>
+                    
+                    {showRefreshButton && (
+                      <Button 
+                        mt={4} 
+                        size="md"
+                        leftIcon={<FaSync />}
+                        variant="solid"
+                        colorScheme="brand"
+                        onClick={handleManualRefresh}
+                        isLoading={isLoading}
+                        loadingText="Refreshing"
+                        rounded="full"
+                        px={6}
+                        py={5}
+                        shadow="md"
+                        _hover={{
+                          transform: 'translateY(-2px)',
+                          shadow: 'lg',
+                        }}
+                        transition="all 0.2s"
+                      >
+                        Refresh Bids
+                      </Button>
+                    )}
                   </VStack>
                 ) : (
                   <VStack spacing={4} align="stretch">
