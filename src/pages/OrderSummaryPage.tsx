@@ -204,8 +204,8 @@ const OrderSummaryPage = () => {
 
   // Calculate total amount if not already set
   const bidAmount = acceptedBid.amount;
-  const serviceFee = deliveryRequest.service_fee || 1200;
-  const totalAmount = deliveryRequest.total_amount || (bidAmount + serviceFee);
+  const serviceFee = 1200; // Fixed service fee of 1200 naira
+  const totalAmount = bidAmount + serviceFee; // Always calculate as bid amount + service fee
 
   return (
     <Container maxW="container.md" py={8}>

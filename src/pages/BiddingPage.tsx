@@ -525,6 +525,8 @@ const BiddingPage = () => {
             rider_id: bid.rider_id,
             bid_id: bidId,
             bid_amount: bidAmount,
+            service_fee: 1200, // Fixed service fee of 1200 naira
+            total_amount: bidAmount + 1200, // Total is bid amount + service fee
             status: 'accepted',
             pickup_code: pickupCode,
             dropoff_code: dropoffCode,
