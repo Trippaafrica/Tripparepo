@@ -474,7 +474,7 @@ const BiddingPage = () => {
         .update({ status: 'accepted' })
         .eq('id', bidId)
         .eq('delivery_request_id', requestId) // Additional safety check
-        .select('*, profiles:rider_id (id, full_name, avatar_url, phone)')
+        .select() // Simple select without profiles join
         .single();
 
       if (bidError) {
@@ -533,9 +533,9 @@ const BiddingPage = () => {
             dropoff_address: requestData.dropoff_address,
             item_description: requestData.item_description,
             delivery_type: requestData.delivery_type,
-            rider_name: bid.profiles?.full_name || 'Rider',
-            rider_phone: bid.profiles?.phone || '',
-            rider_avatar: bid.profiles?.avatar_url || ''
+            rider_name: 'Trippa Rider', // Default rider name since profiles query isn't working
+            rider_phone: '', // Default empty string
+            rider_avatar: '' // Default empty string
           })
           .select()
           .single();
