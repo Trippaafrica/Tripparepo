@@ -447,7 +447,7 @@ const BiddingPage = () => {
       // First verify ownership of the delivery request
       const { data: requestData, error: requestError } = await supabase
         .from('delivery_requests')
-        .select('user_id, status')
+        .select('user_id, status, pickup_address, dropoff_address, delivery_type, item_description')
         .eq('id', requestId)
         .single();
 
@@ -474,7 +474,7 @@ const BiddingPage = () => {
         .update({ status: 'accepted' })
         .eq('id', bidId)
         .eq('delivery_request_id', requestId) // Additional safety check
-        .select()
+        .select('*, profiles:rider_id (id, full_name, avatar_url, phone)')
         .single();
 
       if (bidError) {
@@ -482,17 +482,16 @@ const BiddingPage = () => {
         throw new Error('Failed to accept bid');
       }
 
-      console.log('Successfully updated bid status');
+      console.log('Successfully updated bid status, bid data:', bid);
 
-      // Get the bid amount for request update
+      // Get the bid amount for order creation
       const bidAmount = typeof bid.amount === 'number' ? bid.amount : parseFloat(bid.amount) || 0;
 
-      // Update only the status field in delivery_requests table
+      // Update delivery request status to accepted
       const { data: requestUpdateData, error: requestUpdateError } = await supabase
         .from('delivery_requests')
         .update({ 
           status: 'accepted'
-          // No additional fields - staying minimal to avoid schema errors
         })
         .eq('id', requestId)
         .eq('user_id', user?.id) // Additional safety check
@@ -509,7 +508,55 @@ const BiddingPage = () => {
         throw new Error('Failed to update delivery request status');
       }
 
-      console.log('Successfully updated delivery request status, response:', requestUpdateData);
+      console.log('Successfully updated delivery request status');
+
+      // Create a delivery order record
+      try {
+        // Generate tracking codes
+        const pickupCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+        const dropoffCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+        
+        // Create an order record
+        const { data: orderData, error: orderError } = await supabase
+          .from('delivery_orders') // Using delivery_orders table
+          .insert({
+            delivery_request_id: requestId,
+            user_id: user?.id,
+            rider_id: bid.rider_id,
+            bid_id: bidId,
+            bid_amount: bidAmount,
+            status: 'accepted',
+            pickup_code: pickupCode,
+            dropoff_code: dropoffCode,
+            estimated_time: bid.estimated_time || '30-40 minutes',
+            pickup_address: requestData.pickup_address,
+            dropoff_address: requestData.dropoff_address,
+            item_description: requestData.item_description,
+            delivery_type: requestData.delivery_type,
+            rider_name: bid.profiles?.full_name || 'Rider',
+            rider_phone: bid.profiles?.phone || '',
+            rider_avatar: bid.profiles?.avatar_url || ''
+          })
+          .select()
+          .single();
+          
+        if (orderError) {
+          console.error('Error creating delivery order:', orderError);
+          console.error('Order creation error details:', orderError.message, orderError.details, orderError.hint);
+          // Don't throw here, as the main operation has succeeded
+          toast({
+            title: 'Warning',
+            description: 'Bid accepted, but there was an issue creating the delivery order record.',
+            status: 'warning',
+            duration: 5000,
+          });
+        } else {
+          console.log('Successfully created delivery order record:', orderData);
+        }
+      } catch (orderCreationError: any) {
+        console.error('Exception in order creation:', orderCreationError);
+        // Don't throw here, as the main operation has succeeded
+      }
 
       // Reject all other bids for this delivery request
       const { error: rejectError } = await supabase
