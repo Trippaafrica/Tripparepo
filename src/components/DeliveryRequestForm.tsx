@@ -86,12 +86,15 @@ const DeliveryRequestForm = () => {
       newErrors.item_description = 'Item description is required';
     }
     
-    if (!/^\+?[1-9]\d{9,14}$/.test(formData.senderPhone.trim())) {
-      newErrors.senderPhone = 'Please enter a valid phone number';
+    // Nigerian phone number validation: Should start with +234 followed by 9-10 digits
+    const nigerianPhoneRegex = /^\+234[0-9]{9,10}$/;
+    
+    if (!nigerianPhoneRegex.test(formData.senderPhone.trim())) {
+      newErrors.senderPhone = 'Please enter a valid Nigerian phone number in +234 format';
     }
     
-    if (!/^\+?[1-9]\d{9,14}$/.test(formData.recipientPhone.trim())) {
-      newErrors.recipientPhone = 'Please enter a valid phone number';
+    if (!nigerianPhoneRegex.test(formData.recipientPhone.trim())) {
+      newErrors.recipientPhone = 'Please enter a valid Nigerian phone number in +234 format';
     }
 
     if (formData.weight !== undefined) {
@@ -305,8 +308,14 @@ const DeliveryRequestForm = () => {
                 name="senderPhone"
                 value={formData.senderPhone}
                 onChange={handleInputChange}
-                placeholder="Enter sender's phone number"
+                placeholder="+234 (Nigerian format, no leading zero)"
+                inputMode="tel"
               />
+              {errors.senderPhone && (
+                <Text color="red.500" fontSize="sm" mt={1}>
+                  {errors.senderPhone}
+                </Text>
+              )}
             </FormControl>
           </SimpleGrid>
 
@@ -345,8 +354,14 @@ const DeliveryRequestForm = () => {
                 name="recipientPhone"
                 value={formData.recipientPhone}
                 onChange={handleInputChange}
-                placeholder="Enter recipient's phone number"
+                placeholder="+234 (Nigerian format, no leading zero)"
+                inputMode="tel"
               />
+              {errors.recipientPhone && (
+                <Text color="red.500" fontSize="sm" mt={1}>
+                  {errors.recipientPhone}
+                </Text>
+              )}
             </FormControl>
           </SimpleGrid>
 
