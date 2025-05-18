@@ -82,6 +82,44 @@ const PaymentPage = () => {
     try {
       setIsLoading(true);
 
+      console.log('Fetching payment details for request:', requestId, 'bid:', bidId);
+
+      // First check if we have an order record
+      const { data: orderData, error: orderError } = await supabase
+        .from('delivery_orders')
+        .select('*')
+        .eq('delivery_request_id', requestId)
+        .eq('bid_id', bidId)
+        .single();
+
+      if (!orderError && orderData) {
+        console.log('Found existing order record:', orderData);
+        // Use the order data to set up payment
+        setDeliveryRequest({
+          id: orderData.delivery_request_id,
+          status: orderData.status,
+          delivery_type: orderData.delivery_type,
+          pickup_address: orderData.pickup_address,
+          dropoff_address: orderData.dropoff_address,
+          user_id: orderData.user_id,
+          service_fee: orderData.service_fee || 1200,
+          total_amount: orderData.total_amount || (orderData.amount + 1200)
+        });
+
+        setAcceptedBid({
+          id: orderData.bid_id,
+          delivery_request_id: orderData.delivery_request_id,
+          rider_id: orderData.rider_id,
+          amount: orderData.amount,
+          status: 'accepted'
+        });
+
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('No order record found, falling back to delivery request and bid');
+
       // Fetch the delivery request
       const { data: requestData, error: requestError } = await supabase
         .from('delivery_requests')
@@ -90,6 +128,7 @@ const PaymentPage = () => {
         .single();
 
       if (requestError) {
+        console.error('Error fetching delivery request:', requestError);
         throw new Error('Failed to fetch delivery request details');
       }
 
@@ -110,6 +149,7 @@ const PaymentPage = () => {
         .single();
 
       if (bidError) {
+        console.error('Error fetching bid:', bidError);
         throw new Error('Failed to fetch bid details');
       }
 
@@ -169,47 +209,39 @@ const PaymentPage = () => {
   const initializePaystack = async () => {
     if (!deliveryRequest || !acceptedBid) return;
     
-    // This would use the actual Paystack SDK in a production app
-    const totalAmount = deliveryRequest.total_amount || (acceptedBid.amount + (deliveryRequest.service_fee || 1200));
-    
-    // Example of a Paystack integration object that would be used
-    const paystackConfig = {
-      email: formData.email,
-      amount: totalAmount * 100, // Paystack expects amount in kobo (smallest currency unit)
-      metadata: {
-        custom_fields: [
-          {
-            display_name: "Request ID",
-            variable_name: "request_id",
-            value: requestId
-          },
-          {
-            display_name: "Bid ID",
-            variable_name: "bid_id",
-            value: bidId
-          }
-        ]
-      },
-      publicKey: "YOUR_PAYSTACK_PUBLIC_KEY", // This would be retrieved from environment variables
-      callback: function(response: any) {
-        // Handle successful payment
-        handlePaymentSuccess(response.reference);
-      },
-      onClose: function() {
-        setIsProcessing(false);
-        toast({
-          title: 'Payment Cancelled',
-          description: 'You have cancelled the payment process',
-          status: 'warning',
-          duration: 5000,
-        });
-      }
-    };
-
-    // For demo, we'll just simulate a successful payment
-    setTimeout(() => {
-      handlePaymentSuccess(`PAY-${Date.now()}`);
-    }, 2000);
+    try {
+      setIsProcessing(true);
+      
+      // Use a Paystack test public key
+      const paystackPublicKey = "pk_test_b1c4c2a2b8d6b581b7b2b4f2b3c0c1c2b8d6b581";
+      const totalAmount = deliveryRequest.total_amount || (acceptedBid.amount + (deliveryRequest.service_fee || 1200));
+      
+      console.log('Initializing payment for amount:', totalAmount);
+      
+      // For testing purposes, we'll just simulate a successful payment
+      // In a real implementation, we would use the Paystack library
+      setTimeout(() => {
+        // Set redirect URL for callback after payment
+        localStorage.setItem('paystack_callback_url', 'https://newtrippaf.netlify.app/payment/success');
+        
+        // Generate a random reference number for the transaction
+        const reference = `PAY-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+        console.log('Payment reference:', reference);
+        
+        // Call the success handler with the reference
+        handlePaymentSuccess(reference);
+      }, 2000);
+      
+    } catch (error: any) {
+      console.error('Error initializing payment:', error);
+      setIsProcessing(false);
+      toast({
+        title: 'Payment Error',
+        description: error.message || 'Failed to initialize payment',
+        status: 'error',
+        duration: 5000,
+      });
+    }
   };
 
   const handlePaymentSuccess = async (reference: string) => {
