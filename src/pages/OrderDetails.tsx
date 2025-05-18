@@ -233,12 +233,11 @@ const OrderDetails = () => {
 
   const getStatusSteps = () => {
     const steps = [
-      { label: 'Order Placed', value: 'pending', completed: true },
-      { label: 'Bid Accepted', value: 'accepted', completed: ['accepted', 'assigned', 'in_progress', 'pickup_ready', 'delivering', 'completed'].includes(order?.status || '') },
-      { label: 'Rider Assigned', value: 'assigned', completed: ['assigned', 'in_progress', 'pickup_ready', 'delivering', 'completed'].includes(order?.status || '') },
-      { label: 'Pickup Ready', value: 'pickup_ready', completed: ['pickup_ready', 'delivering', 'completed'].includes(order?.status || '') },
-      { label: 'Delivering', value: 'delivering', completed: ['delivering', 'completed'].includes(order?.status || '') },
-      { label: 'Delivered', value: 'completed', completed: order?.status === 'completed' },
+      { label: 'Pending', value: 'pending', completed: true },
+      { label: 'Accepted', value: 'accepted', completed: ['accepted', 'picked_up', 'in_transit', 'delivered'].includes(order?.status || '') },
+      { label: 'Picked Up', value: 'picked_up', completed: ['picked_up', 'in_transit', 'delivered'].includes(order?.status || '') },
+      { label: 'In Transit', value: 'in_transit', completed: ['in_transit', 'delivered'].includes(order?.status || '') },
+      { label: 'Delivered', value: 'delivered', completed: order?.status === 'delivered' },
     ];
     return steps;
   };
@@ -246,12 +245,11 @@ const OrderDetails = () => {
   const getProgressValue = () => {
     const status = order?.status || '';
     switch (status) {
-      case 'pending': return 16;
-      case 'accepted': return 32;
-      case 'assigned': return 48;
-      case 'pickup_ready': return 64;
-      case 'delivering': return 82;
-      case 'completed': return 100;
+      case 'pending': return 20;
+      case 'accepted': return 40;
+      case 'picked_up': return 60;
+      case 'in_transit': return 80;
+      case 'delivered': return 100;
       default: return 0;
     }
   };
@@ -261,10 +259,9 @@ const OrderDetails = () => {
     switch (status) {
       case 'pending': return 'yellow';
       case 'accepted': return 'blue';
-      case 'assigned': return 'blue';
-      case 'pickup_ready': return 'teal';
-      case 'delivering': return 'purple';
-      case 'completed': return 'green';
+      case 'picked_up': return 'teal';
+      case 'in_transit': return 'purple';
+      case 'delivered': return 'green';
       case 'cancelled': return 'red';
       default: return 'gray';
     }
@@ -373,7 +370,7 @@ const OrderDetails = () => {
         </Card>
 
         {/* Rider Details - Only show if status is accepted or more advanced */}
-        {rider && ['accepted', 'assigned', 'in_progress', 'pickup_ready', 'delivering', 'completed'].includes(order?.status) && (
+        {rider && ['accepted', 'picked_up', 'in_transit', 'delivered'].includes(order?.status) && (
           <Card bg={bgColor} border="1px solid" borderColor={borderColor}>
             <CardBody p={4}>
               <VStack spacing={4} align="stretch">
