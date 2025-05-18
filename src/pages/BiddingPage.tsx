@@ -213,6 +213,55 @@ const BiddingPage = () => {
     }
   };
 
+  // Generate random estimated time based on distance and vehicle type
+  const generateEstimatedTime = (vehicleType: string) => {
+    // Get the distance if available, or use a default
+    const distance = request?.estimated_distance_km || 5.3;
+    
+    // Base minutes per kilometer based on vehicle type
+    let baseMinutesPerKm = 0;
+    switch(vehicleType) {
+      case 'bike': baseMinutesPerKm = 2.5; break;   // 24km/h
+      case 'truck': baseMinutesPerKm = 2.8; break;  // 21km/h
+      case 'van': baseMinutesPerKm = 2.2; break;    // 27km/h
+      case 'fuel': baseMinutesPerKm = 2.4; break;   // 25km/h
+      default: baseMinutesPerKm = 2.5;              // Default
+    }
+    
+    // Calculate base time in minutes based on distance
+    const baseMinutes = Math.round(distance * baseMinutesPerKm);
+    
+    // Add randomness - between -10% and +30% of base time
+    const randomFactor = 0.9 + (Math.random() * 0.4); // 0.9 to 1.3
+    const minutes = Math.round(baseMinutes * randomFactor);
+    
+    // Add fixed time for pickup and dropoff - with randomness
+    const logisticsTime = 15 + Math.floor(Math.random() * 10); // 15-24 minutes
+    const totalMinutes = minutes + logisticsTime;
+    
+    // Format differently based on total time
+    if (totalMinutes <= 30) {
+      return `${totalMinutes} minutes`;
+    } else if (totalMinutes <= 60) {
+      // Range format for medium trips
+      const lowerBound = Math.floor(totalMinutes / 5) * 5; // Round down to nearest 5
+      const upperBound = lowerBound + 10;
+      return `${lowerBound}-${upperBound} minutes`;
+    } else {
+      // Hours format for longer trips
+      const hours = Math.floor(totalMinutes / 60);
+      const remainingMinutes = totalMinutes % 60;
+      
+      if (remainingMinutes < 15) {
+        return `About ${hours} hour${hours > 1 ? 's' : ''}`;
+      } else if (remainingMinutes >= 45) {
+        return `About ${hours + 1} hour${hours > 0 ? 's' : ''}`;
+      } else {
+        return `${hours}.5 hour${hours > 1 ? 's' : ''}`;
+      }
+    }
+  };
+
   const fetchBids = async () => {
     // Prevent multiple simultaneous API calls
     if (isLoading) return;
@@ -275,26 +324,34 @@ const BiddingPage = () => {
 
       console.log('Received bids data:', bidsData?.length || 0, 'pending bids');
 
-      const formattedBids = (bidsData || []).map((bid: any) => ({
-        id: bid.id,
-        delivery_request_id: bid.delivery_request_id,
-        rider_id: bid.rider_id,
-        amount: typeof bid.amount === 'number' ? bid.amount : parseFloat(bid.amount) || 0,
-        estimated_time: '30-45 minutes', // Default estimation
-        status: bid.status,
-        created_at: bid.created_at,
-        rider_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
-        rider_rating: bid.profiles?.rating || 4.5, // Fallback to a good rating if none exists
-        rider: {
-          id: bid.rider_id,
-          rating: bid.profiles?.rating || 4.5,
-          vehicle_type: request?.delivery_type || 'bike'
-        },
-        profile: {
-          full_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
-          rating: bid.profiles?.rating || 4.5
-        }
-      })) as Bid[];
+      const formattedBids = (bidsData || []).map((bid: any) => {
+        // Determine vehicle type based on request type or generate randomly
+        const vehicleType = request?.delivery_type || ['bike', 'truck', 'van', 'fuel'][Math.floor(Math.random() * 4)] as 'bike' | 'truck' | 'van' | 'fuel';
+        
+        // Generate a random estimated time for this bid based on vehicle type and distance
+        const estimatedTime = generateEstimatedTime(vehicleType);
+        
+        return {
+          id: bid.id,
+          delivery_request_id: bid.delivery_request_id,
+          rider_id: bid.rider_id,
+          amount: typeof bid.amount === 'number' ? bid.amount : parseFloat(bid.amount) || 0,
+          estimated_time: estimatedTime,
+          status: bid.status,
+          created_at: bid.created_at,
+          rider_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
+          rider_rating: bid.profiles?.rating || 4.5, // Fallback to a good rating if none exists
+          rider: {
+            id: bid.rider_id,
+            rating: bid.profiles?.rating || 4.5,
+            vehicle_type: vehicleType
+          },
+          profile: {
+            full_name: bid.profiles?.full_name || 'Rider ' + bid.rider_id.substring(0, 4),
+            rating: bid.profiles?.rating || 4.5
+          }
+        };
+      }) as Bid[];
 
       console.log('Formatted bids:', formattedBids);
       setBids(formattedBids);
