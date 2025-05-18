@@ -32,7 +32,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar, FaSortAmountDown, FaSortAmountUp, FaFilter, FaRoute } from 'react-icons/fa';
+import { FaBicycle, FaMoneyBillWave, FaClock, FaMapMarkerAlt, FaStar, FaSortAmountDown, FaSortAmountUp, FaFilter, FaRoute, FaSync } from 'react-icons/fa';
 import CountdownTimer from '../components/CountdownTimer';
 import RiderProfileCard from '../components/RiderProfileCard';
 import { calculateDistance, estimateDeliveryTime } from '../services/distance';
@@ -103,9 +103,17 @@ const BiddingPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [waitingStartTime] = useState(new Date());
   const [sortBy, setSortBy] = useState<'amount_asc' | 'amount_desc' | 'time_asc' | 'time_desc'>('amount_asc');
+  const [showRefreshButton, setShowRefreshButton] = useState(false);
 
   useEffect(() => {
     fetchDeliveryRequest();
+    
+    // Show refresh button after 10 seconds
+    const refreshTimer = setTimeout(() => {
+      setShowRefreshButton(true);
+    }, 10000); // 10 seconds
+    
+    return () => clearTimeout(refreshTimer);
   }, [requestId]);
 
   useEffect(() => {
@@ -566,6 +574,16 @@ const BiddingPage = () => {
     });
   };
 
+  // Add manual refresh function
+  const handleManualRefresh = () => {
+    console.log('Manual refresh triggered');
+    setIsLoading(true);
+    fetchBids();
+    // Visual feedback by hiding the button briefly
+    setShowRefreshButton(false);
+    setTimeout(() => setShowRefreshButton(true), 2000);
+  };
+
   if (isLoading) {
     return (
       <Container maxW="container.md" py={8}>
@@ -674,6 +692,20 @@ const BiddingPage = () => {
                   <Heading size="md" color="brand.secondary">Available Bids</Heading>
                   
                   <HStack>
+                    {showRefreshButton && (
+                      <Button
+                        size="sm"
+                        leftIcon={<FaSync />}
+                        variant="outline"
+                        colorScheme="brand"
+                        onClick={handleManualRefresh}
+                        isLoading={isLoading}
+                        loadingText="Refreshing"
+                      >
+                        Refresh
+                      </Button>
+                    )}
+                    
                     {bids.length > 0 && (
                       <Menu>
                         <MenuButton
@@ -733,17 +765,6 @@ const BiddingPage = () => {
                       Your delivery request has been sent to nearby riders.
                       <br />Bids should start appearing soon.
                     </Text>
-                    {getTimeElapsed() > 3 && (
-                      <Button 
-                        mt={4} 
-                        variant="outline" 
-                        colorScheme="brand" 
-                        size="sm"
-                        onClick={() => fetchBids()}
-                      >
-                        Refresh Bids
-                      </Button>
-                    )}
                   </VStack>
                 ) : (
                   <VStack spacing={4} align="stretch">
