@@ -382,32 +382,49 @@ const OrderDetails = () => {
                   <Heading size="sm">Rider Details</Heading>
                 </HStack>
                 <Divider />
-                <HStack spacing={4} align="center">
+                <HStack spacing={4} align="flex-start">
                   <Avatar
-                    size="lg"
+                    size="xl"
                     name={rider.full_name}
                     src={rider.avatar_url}
                     bg="brand.secondary"
                     color="white"
                   />
-                  <VStack align="start" spacing={1} flex={1}>
-                    <HStack>
-                      <Text fontWeight="bold">{rider.full_name}</Text>
-                      <Badge colorScheme="yellow">
-                        <HStack spacing={1}>
-                          <Icon as={FaStar} />
-                          <Text>{rider.rating}</Text>
-                        </HStack>
-                      </Badge>
-                    </HStack>
-                    <Text fontSize="sm">{rider.vehicle_type} • {rider.vehicle_number}</Text>
+                  <VStack align="start" spacing={2} flex={1}>
+                    <Box>
+                      <Text fontWeight="bold" fontSize="lg" color="brand.secondary">
+                        {rider.full_name}
+                      </Text>
+                      <HStack mt={1} spacing={1}>
+                        <Icon as={FaStar} color="yellow.400" />
+                        <Text fontWeight="medium">{rider.rating} / 5</Text>
+                        <Badge colorScheme="yellow" ml={1}>
+                          {rider.rating >= 4.8 ? 'Top Rider' : 
+                           rider.rating >= 4.5 ? 'Experienced' : 
+                           rider.rating >= 4.0 ? 'Good' : 'Regular'}
+                        </Badge>
+                      </HStack>
+                    </Box>
+                    
+                    <Box>
+                      <Text color="gray.500" mb={1} fontSize="sm">
+                        <Icon as={FaPhone} mr={2} />
+                        <b>Phone:</b> {rider.phone_number}
+                      </Text>
+                      <Text color="gray.500" fontSize="sm">
+                        <Icon as={FaMotorcycle} mr={2} />
+                        <b>Vehicle:</b> {rider.vehicle_type} • {rider.vehicle_number}
+                      </Text>
+                    </Box>
+                    
                     <Button
                       leftIcon={<FaPhone />}
-                      size="sm"
+                      size="md"
                       colorScheme="green"
-                      variant="outline"
                       onClick={callRider}
                       mt={2}
+                      width="100%"
+                      borderRadius="full"
                     >
                       Call Rider
                     </Button>
