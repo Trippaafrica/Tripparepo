@@ -118,10 +118,10 @@ const BiddingPage = () => {
       
       // Setup Supabase realtime subscription with improved logging
       const subscription = supabase
-        .channel(`bids-channel-${requestId}`)
+        .channel(`public:bids:delivery_request_id=eq.${requestId}`)
         .on('postgres_changes', 
           { 
-            event: 'INSERT', 
+            event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
             schema: 'public', 
             table: 'bids',
             filter: `delivery_request_id=eq.${requestId}`
@@ -133,30 +133,39 @@ const BiddingPage = () => {
           }
         )
         .subscribe((status) => {
-          console.log(`Subscription status for bids-channel-${requestId}:`, status);
+          console.log(`Subscription status for bids channel:`, status);
+        });
+
+      // Also subscribe to delivery_requests table for this request
+      const requestSubscription = supabase
+        .channel(`public:delivery_requests:id=eq.${requestId}`)
+        .on('postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'delivery_requests',
+            filter: `id=eq.${requestId}`
+          },
+          (payload) => {
+            console.log('🔄 Delivery request update received:', payload);
+            fetchDeliveryRequest();
+          }
+        )
+        .subscribe((status) => {
+          console.log(`Subscription status for delivery request channel:`, status);
         });
 
       // More frequent polling for debugging purposes - remove in production
       const shortPollingInterval = setInterval(() => {
-        if (bids.length === 0 || request.status === 'pending') {
-          console.log('Short polling interval: Checking for new bids...');
-          fetchBids();
-        }
-      }, 15000); // Every 15 seconds
-
-      // Regular polling as a backup
-      const pollingInterval = setInterval(() => {
-        if (bids.length === 0 || request.status === 'pending') {
-          console.log('Regular polling: Checking for new bids...');
-          fetchBids();
-        }
-      }, 45000); // Every 45 seconds
+        console.log('Short polling interval: Checking for new bids...');
+        fetchBids();
+      }, 10000); // Every 10 seconds
 
       return () => {
         console.log('Cleaning up bid subscriptions');
         subscription.unsubscribe();
+        requestSubscription.unsubscribe();
         clearInterval(shortPollingInterval);
-        clearInterval(pollingInterval);
       };
     }
   }, [request, requestId]);
@@ -278,9 +287,6 @@ const BiddingPage = () => {
   };
 
   const fetchBids = async () => {
-    // Prevent multiple simultaneous API calls
-    if (isLoading) return;
-    
     try {
       setIsLoading(true);
       console.log('Fetching bids for request:', requestId);
@@ -290,65 +296,40 @@ const BiddingPage = () => {
         throw new Error('No request ID provided');
       }
 
-      // Diagnostic query - log all bids in the system for debugging
+      // Simple diagnostic query - log all bids in the system
+      console.log('Checking for all bids in system...');
       const { data: allBidsData, error: allBidsError } = await supabase
         .from('bids')
-        .select('id, rider_id, delivery_request_id, status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .select('*')
+        .limit(20);
       
       if (allBidsError) {
         console.error('Error querying all bids:', allBidsError);
       } else {
-        console.log('Latest 10 bids in system:', allBidsData);
+        console.log('Latest bids in system:', allBidsData);
       }
 
-      // Skip verification if we already have the request
-      if (!request) {
-        // Verify that the user has access to this delivery request
-        const { data: requestData, error: requestError } = await supabase
-          .from('delivery_requests')
-          .select('id, user_id')
-          .eq('id', requestId)
-          .single();
-
-        if (requestError) {
-          console.error('Error fetching delivery request:', requestError);
-          throw new Error('Could not verify access to delivery request');
-        }
-
-        if (!requestData) {
-          throw new Error('Delivery request not found');
-        }
-
-        if (requestData.user_id !== user?.id) {
-          throw new Error('You do not have permission to view these bids');
-        }
-      }
-
-      // Diagnostic check - get all bids for this request regardless of status
-      const { data: allRequestBids, error: allRequestBidsError } = await supabase
+      // Direct query for this specific request, without filtering by status
+      console.log(`Looking for ALL bids specifically for request ${requestId}`);
+      const { data: requestBids, error: requestBidsError } = await supabase
         .from('bids')
-        .select('id, status, created_at')
+        .select(`
+          id,
+          delivery_request_id,
+          rider_id,
+          amount,
+          status,
+          created_at
+        `)
         .eq('delivery_request_id', requestId);
-      
-      if (allRequestBidsError) {
-        console.error('Error checking all bids for this request:', allRequestBidsError);
+
+      if (requestBidsError) {
+        console.error('Error finding bids for this specific request:', requestBidsError);
       } else {
-        console.log('All bids for this request:', allRequestBids);
-        
-        if (allRequestBids && allRequestBids.length > 0) {
-          const statusCounts = allRequestBids.reduce((acc: any, bid: any) => {
-            acc[bid.status] = (acc[bid.status] || 0) + 1;
-            return acc;
-          }, {});
-          console.log('Bid status counts:', statusCounts);
-        } else {
-          console.log('No bids found for this request at all');
-        }
+        console.log(`Found ${requestBids?.length || 0} bids for this request:`, requestBids);
       }
 
-      // Use a simplified query to get only what's needed
+      // Final query - get all the data we need with joins
       const { data: bidsData, error: bidsError } = await supabase
         .from('bids')
         .select(`
@@ -364,24 +345,29 @@ const BiddingPage = () => {
             rating
           )
         `)
-        .eq('delivery_request_id', requestId)
-        .eq('status', 'pending'); // Only get pending bids to reduce data
+        .eq('delivery_request_id', requestId);
+        // Removed .eq('status', 'pending') to see ALL bids
 
       if (bidsError) {
-        console.error('Error fetching bids:', bidsError);
+        console.error('Error fetching bids with profile data:', bidsError);
         throw new Error(`Database error: ${bidsError.message}`);
       }
 
-      console.log('Received bids data:', bidsData?.length || 0, 'pending bids');
+      console.log('Received bids data with profile information:', bidsData);
 
-      const formattedBids = (bidsData || []).map((bid: any) => {
+      // Filter to only pending bids for display
+      const pendingBids = bidsData?.filter(bid => bid.status === 'pending') || [];
+      console.log('Filtered to pending bids only:', pendingBids);
+
+      const formattedBids = (pendingBids || []).map((bid: any) => {
         // Determine vehicle type based on request type or generate randomly
         const vehicleType = request?.delivery_type || ['bike', 'truck', 'van', 'fuel'][Math.floor(Math.random() * 4)] as 'bike' | 'truck' | 'van' | 'fuel';
         
         // Generate a random estimated time for this bid based on vehicle type and distance
         const estimatedTime = generateEstimatedTime(vehicleType);
         
-        return {
+        // Format the bid data
+        const formattedBid = {
           id: bid.id,
           delivery_request_id: bid.delivery_request_id,
           rider_id: bid.rider_id,
@@ -401,9 +387,11 @@ const BiddingPage = () => {
             rating: bid.profiles?.rating || 4.5
           }
         };
+        console.log('Formatted bid:', formattedBid);
+        return formattedBid;
       }) as Bid[];
 
-      console.log('Formatted bids:', formattedBids);
+      console.log('Final formatted bids array:', formattedBids);
       setBids(formattedBids);
     } catch (error: any) {
       console.error('Full error details:', error);

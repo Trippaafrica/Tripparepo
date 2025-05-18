@@ -18,7 +18,21 @@ export const supabase = (() => {
     auth: {
       persistSession: true,
       storageKey: 'trippa-auth-storage'
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    },
+    db: {
+      schema: 'public'
     }
+  });
+  
+  // Initialize realtime subscriptions
+  console.log('Initializing Supabase realtime subscriptions');
+  supabaseInstance.channel('global').subscribe((status) => {
+    console.log('Global channel status:', status);
   });
   
   return supabaseInstance;
