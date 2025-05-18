@@ -124,11 +124,11 @@ const OrderSummaryPage = () => {
 
       // Fetch rider details
       const { data: riderData, error: riderError } = await supabase
-        .from('profiles')
+        .from('riders')
         .select(`
           id,
           full_name,
-          phone_number,
+          phone,
           rating
         `)
         .eq('id', bidData.rider_id)
@@ -138,7 +138,12 @@ const OrderSummaryPage = () => {
         console.error('Error fetching rider details:', riderError);
         // Continue without rider details rather than failing completely
       } else {
-        setRider(riderData);
+        setRider({
+          id: riderData.id,
+          full_name: riderData.full_name,
+          phone_number: riderData.phone,
+          rating: riderData.rating
+        });
       }
 
     } catch (error: any) {
