@@ -128,7 +128,6 @@ const OrderSummaryPage = () => {
         .select(`
           id,
           full_name,
-          phone,
           rating
         `)
         .eq('id', bidData.rider_id)
@@ -141,7 +140,6 @@ const OrderSummaryPage = () => {
         setRider({
           id: riderData.id,
           full_name: riderData.full_name,
-          phone_number: riderData.phone,
           rating: riderData.rating
         });
       }
@@ -298,9 +296,6 @@ const OrderSummaryPage = () => {
                     <Text color="white" fontWeight="bold">
                       {rider?.full_name || `Rider ${acceptedBid.rider_id.slice(0, 6)}`}
                     </Text>
-                    {rider?.phone_number && (
-                      <Text color="gray.300" fontSize="sm">Phone: {rider.phone_number}</Text>
-                    )}
                     {rider?.rating && (
                       <Text color="gray.300" fontSize="sm">Rating: {rider.rating.toFixed(1)} / 5</Text>
                     )}

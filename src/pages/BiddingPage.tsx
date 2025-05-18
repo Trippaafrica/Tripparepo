@@ -534,10 +534,7 @@ const BiddingPage = () => {
             pickup_address: requestData.pickup_address,
             dropoff_address: requestData.dropoff_address,
             item_description: requestData.item_description,
-            delivery_type: requestData.delivery_type,
-            rider_name: 'Trippa Rider', // Default rider name since profiles query isn't working
-            rider_phone: '', // Default empty string
-            rider_avatar: '' // Default empty string
+            rider_name: 'Trippa Rider' // Only keep rider_name which likely exists
           })
           .select()
           .single();

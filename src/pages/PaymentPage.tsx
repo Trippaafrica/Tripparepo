@@ -123,7 +123,7 @@ const PaymentPage = () => {
       // Fetch the delivery request
       const { data: requestData, error: requestError } = await supabase
         .from('delivery_requests')
-        .select('id, status, delivery_type, pickup_address, dropoff_address, user_id, accepted_bid_id, service_fee, total_amount')
+        .select('id, status, delivery_type, pickup_address, dropoff_address, user_id, service_fee, total_amount')
         .eq('id', requestId)
         .single();
 
