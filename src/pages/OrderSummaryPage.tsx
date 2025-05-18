@@ -184,13 +184,61 @@ const OrderSummaryPage = () => {
         localStorage.setItem('paystack_request_id', requestId || '');
         localStorage.setItem('paystack_bid_id', bidId || '');
         
-        console.log('Redirecting to Paystack with reference:', reference);
+        // Show loading toast
+        toast({
+          title: 'Redirecting to payment',
+          description: 'Please wait while we redirect you to the payment page...',
+          status: 'info',
+          duration: 3000,
+        });
         
-        // Direct redirect to Paystack checkout page
-        const paystackURL = `https://checkout.paystack.com/023a80793215431bdc8c277e9591b024005202a5/payment?email=${encodeURIComponent(user?.email || '')}&amount=${totalAmount * 100}&ref=${reference}&callback_url=${encodeURIComponent('https://newtrippaf.netlify.app/orders')}`;
+        console.log('Initializing Paystack payment with reference:', reference);
         
-        // Redirect to Paystack
-        window.location.href = paystackURL;
+        // Redirect to the processed URL with inline checkout
+        // This uses the Paystack popup approach which is more reliable
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.async = true;
+        
+        script.onload = () => {
+          // @ts-ignore
+          const paystack = window.PaystackPop;
+          const handler = paystack.setup({
+            key: 'pk_live_023a80793215431bdc8c277e9591b024005202a5',
+            email: user?.email || 'customer@trippa.app',
+            amount: totalAmount * 100, // Convert to kobo
+            ref: reference,
+            callback: function(response: any) {
+              // Handle success
+              console.log('Payment successful. Reference:', response.reference);
+              window.location.href = 'https://newtrippaf.netlify.app/orders';
+            },
+            onClose: function() {
+              // Handle case when user closes the payment modal
+              console.log('Payment window closed');
+              toast({
+                title: 'Payment Cancelled',
+                description: 'You have cancelled the payment process',
+                status: 'info',
+                duration: 5000,
+              });
+            }
+          });
+          
+          handler.openIframe();
+        };
+        
+        script.onerror = () => {
+          toast({
+            title: 'Payment Error',
+            description: 'Failed to load payment system. Please try again.',
+            status: 'error',
+            duration: 5000,
+          });
+        };
+        
+        document.head.appendChild(script);
+        
       } catch (error) {
         console.error('Error redirecting to payment:', error);
         toast({
