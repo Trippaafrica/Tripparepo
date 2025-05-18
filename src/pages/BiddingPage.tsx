@@ -489,18 +489,20 @@ const BiddingPage = () => {
       console.log('Successfully updated bid status');
 
       // Update delivery request status - removed accepted_bid_id which doesn't exist in schema
-      const { error: requestUpdateError } = await supabase
+      const { data: requestUpdateData, error: requestUpdateError } = await supabase
         .from('delivery_requests')
         .update({ 
           status: 'accepted',
-          service_fee: 1200, // Add service fee
-          total_amount: bid.amount + 1200 // Calculate total amount
+          // Adding more detailed debugging
+          rider_id: bid.rider_id // Store the rider_id of the accepted bid
         })
         .eq('id', requestId)
-        .eq('user_id', user?.id); // Additional safety check
+        .eq('user_id', user?.id) // Additional safety check
+        .select();
 
       if (requestUpdateError) {
         console.error('Error updating delivery request:', requestUpdateError);
+        console.error('Error details:', requestUpdateError.message, requestUpdateError.details, requestUpdateError.hint);
         // Try to revert the bid status
         await supabase
           .from('bids')
@@ -509,7 +511,7 @@ const BiddingPage = () => {
         throw new Error('Failed to update delivery request status');
       }
 
-      console.log('Successfully updated delivery request status');
+      console.log('Successfully updated delivery request status, response:', requestUpdateData);
 
       // Reject all other bids for this delivery request
       const { error: rejectError } = await supabase
