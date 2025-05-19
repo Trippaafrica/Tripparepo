@@ -125,7 +125,7 @@ const OrderDetails = () => {
           distance_km: deliveryRequest?.estimated_distance_km || 5.3,
           estimated_time: bidData?.estimated_time || '30-45 mins',
           amount: orderData.amount,
-          total_amount: orderData.total_amount || orderData.amount,
+          total_amount: (orderData.amount || 0) + 1200, // Add flat service fee
         };
 
         setOrder(transformedOrder);
@@ -195,7 +195,7 @@ const OrderDetails = () => {
           distance_km: requestData.estimated_distance_km || 5.3,
           estimated_time: acceptedBid?.estimated_time || '30-45 mins',
           amount: acceptedBid?.amount || 0,
-          total_amount: requestData.total_amount || acceptedBid?.amount || 0,
+          total_amount: (acceptedBid?.amount || 0) + 1200, // Add flat service fee
         };
 
         setOrder(transformedOrder);
@@ -460,7 +460,10 @@ const OrderDetails = () => {
                 <Stat>
                   <StatLabel>Amount</StatLabel>
                   <StatNumber>₦{order.total_amount.toLocaleString()}</StatNumber>
-                  <StatHelpText>Total paid</StatHelpText>
+                  <StatHelpText>
+                    <Text fontSize="xs">Delivery: ₦{order.amount.toLocaleString()}</Text>
+                    <Text fontSize="xs">Service Fee: ₦1,200</Text>
+                  </StatHelpText>
                 </Stat>
               </Flex>
               
