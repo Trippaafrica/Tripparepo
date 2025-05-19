@@ -49,6 +49,7 @@ interface OrderDetails {
   distance_km: number;
   estimated_time: string;
   amount: number;
+  total_amount: number;
 }
 
 interface Rider {
@@ -124,6 +125,7 @@ const OrderDetails = () => {
           distance_km: deliveryRequest?.estimated_distance_km || 5.3,
           estimated_time: bidData?.estimated_time || '30-45 mins',
           amount: orderData.amount,
+          total_amount: orderData.total_amount || orderData.amount,
         };
 
         setOrder(transformedOrder);
@@ -193,6 +195,7 @@ const OrderDetails = () => {
           distance_km: requestData.estimated_distance_km || 5.3,
           estimated_time: acceptedBid?.estimated_time || '30-45 mins',
           amount: acceptedBid?.amount || 0,
+          total_amount: requestData.total_amount || acceptedBid?.amount || 0,
         };
 
         setOrder(transformedOrder);
@@ -456,8 +459,8 @@ const OrderDetails = () => {
                 </Stat>
                 <Stat>
                   <StatLabel>Amount</StatLabel>
-                  <StatNumber>₦{order.amount.toLocaleString()}</StatNumber>
-                  <StatHelpText>Delivery fee</StatHelpText>
+                  <StatNumber>₦{order.total_amount.toLocaleString()}</StatNumber>
+                  <StatHelpText>Total paid</StatHelpText>
                 </Stat>
               </Flex>
               
