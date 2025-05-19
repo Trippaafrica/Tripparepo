@@ -42,6 +42,7 @@ interface Bid {
   rider_id: string;
 }
 
+const paystackKey = import.meta.env.VITE_PAYSTACK_KEY;
 const SERVICE_CHARGE = 1000; // Service charge in Naira
 
 const OrderSummary = () => {
@@ -114,7 +115,7 @@ const OrderSummary = () => {
     reference,
     email: user?.email || '',
     amount: bid ? calculateTotalFee(bid.amount) * 100 : 0, // Convert to kobo
-    publicKey: 'pk_live_023a80793215431bdc8c277e9591b024005202a5',
+    publicKey: paystackKey,
   };
 
   const initializePayment = usePaystackPayment(config);

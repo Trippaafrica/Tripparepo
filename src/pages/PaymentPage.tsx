@@ -85,6 +85,8 @@ interface PaymentFormData {
   paymentMethod: 'card' | 'bank' | 'ussd' | 'qr';
 }
 
+const paystackKey = import.meta.env.VITE_PAYSTACK_KEY;
+
 const PaymentPage = () => {
   const { requestId, bidId } = useParams<{ requestId: string; bidId: string }>();
   const { user } = useAuth();
@@ -243,7 +245,7 @@ const PaymentPage = () => {
       setIsProcessing(true);
       
       // Use the Paystack live public key
-      const paystackPublicKey = "pk_live_023a80793215431bdc8c277e9591b024005202a5";
+      const paystackPublicKey = paystackKey;
       // Calculate total directly, don't rely on fields that might not exist
       const totalAmount = acceptedBid.amount + 1200; // rider fee + service fee
       

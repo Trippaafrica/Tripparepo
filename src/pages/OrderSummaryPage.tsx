@@ -73,6 +73,8 @@ interface Rider {
   vehicle_details?: string;
 }
 
+const paystackKey = import.meta.env.VITE_PAYSTACK_KEY;
+
 const OrderSummaryPage = () => {
   const { requestId, bidId } = useParams<{ requestId: string; bidId: string }>();
   const { user } = useAuth();
@@ -204,7 +206,7 @@ const OrderSummaryPage = () => {
           // @ts-ignore
           const paystack = window.PaystackPop;
           const handler = paystack.setup({
-            key: 'pk_live_023a80793215431bdc8c277e9591b024005202a5',
+            key: paystack,
             email: user?.email || 'customer@trippa.app',
             amount: totalAmount * 100, // Convert to kobo
             ref: reference,
