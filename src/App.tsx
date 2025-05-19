@@ -110,7 +110,7 @@ function App() {
             minH="100vh" 
             pb="60px" // Space for bottom navigation
             position="relative"
-            maxW="500px" // Mobile app width constraint
+            maxW="1500px" // Mobile app width constraint
             mx="auto"    // Center the app
             boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
           >

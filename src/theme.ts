@@ -7,10 +7,11 @@ const theme = extendTheme({
   },
   colors: {
     brand: {
-      primary: '#9D4EDD', // Dark purple
-      secondary: '#39FF14', // Neon green
+      primary: '#9784F4', // Dark purple
+      secondary: '#99FF00', // Neon green
       dark: '#1A1A2E', // Dark background
-      light: '#F8F9FA', // Light text
+      light: '#F8F9FA',
+      white: '#F2F2F2' // Light text
     },
   },
   styles: {
