@@ -127,7 +127,7 @@ const Home = () => {
     <Box mb={20}>
       {/* Welcome Section */}
       <Box 
-        bgGradient="linear(to-br, brand.dark, #312870)" 
+        bgGradient="linear(to-br, brand.dark, #9784F4)" 
         pt={10} 
         pb={14}
         px={4}

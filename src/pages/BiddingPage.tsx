@@ -28,6 +28,7 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
+  Flex,
 } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
@@ -718,13 +719,32 @@ const BiddingPage = () => {
           <Card width="100%" bg="rgba(26, 26, 46, 0.8)" backdropFilter="blur(10px)" border="1px solid rgba(157, 78, 221, 0.2)">
             <CardBody>
               <VStack spacing={4} align="stretch">
-                <HStack spacing={4} justify="space-between">
-                  <Heading size="md" color="brand.secondary">Available Bids</Heading>
+                <Stack 
+                  direction={{ base: "column", md: "row" }}
+                  spacing={{ base: 3, md: 4 }}
+                  justify="space-between"
+                  align={{ base: "start", md: "center" }}
+                  width="100%"
+                >
+                  <Heading 
+                    size="md" 
+                    color="brand.secondary"
+                    bgGradient="linear(to-r, brand.primary, brand.secondary)"
+                    bgClip="text"
+                  >
+                    Available Bids
+                  </Heading>
                   
-                  <HStack>
+                  <Flex 
+                    flexWrap="wrap" 
+                    gap={2} 
+                    align="center"
+                    justify={{ base: "flex-start", md: "flex-end" }}
+                    width={{ base: "100%", md: "auto" }}
+                  >
                     {showRefreshButton && (
                       <Button
-                        size="sm"
+                        size={{ base: "xs", sm: "sm" }}
                         leftIcon={<FaSync />}
                         variant="solid"
                         colorScheme="brand"
@@ -748,7 +768,7 @@ const BiddingPage = () => {
                       <Menu>
                         <MenuButton
                           as={IconButton}
-                          size="sm"
+                          size={{ base: "xs", sm: "sm" }}
                           aria-label="Sort options"
                           icon={<FaFilter />}
                           variant="outline"
@@ -787,14 +807,20 @@ const BiddingPage = () => {
                       </Menu>
                     )}
                     
-                    <Badge colorScheme={bids.length > 0 ? "green" : "yellow"} fontSize="sm">
+                    <Badge 
+                      colorScheme={bids.length > 0 ? "green" : "yellow"} 
+                      fontSize={{ base: "xs", sm: "sm" }}
+                      py={1}
+                      px={2}
+                      borderRadius="full"
+                    >
                       {bids.length} {bids.length === 1 ? 'bid' : 'bids'} available
                     </Badge>
-                  </HStack>
-                </HStack>
+                  </Flex>
+                </Stack>
 
                 {bids.length === 0 ? (
-                  <VStack py={8} spacing={4} align="center">
+                  <VStack py={{ base: 6, md: 8 }} spacing={4} align="center">
                     <CountdownTimer duration={15} onComplete={handleTimerComplete} />
                     <Text color="gray.200" textAlign="center" mt={2}>
                       Waiting for rider bids...
@@ -807,7 +833,7 @@ const BiddingPage = () => {
                     {showRefreshButton && (
                       <Button 
                         mt={4} 
-                        size="md"
+                        size={{ base: "md", md: "md" }}
                         leftIcon={<FaSync />}
                         variant="solid"
                         colorScheme="brand"
@@ -815,14 +841,15 @@ const BiddingPage = () => {
                         isLoading={isLoading}
                         loadingText="Refreshing"
                         rounded="full"
-                        px={6}
-                        py={5}
+                        px={{ base: 4, md: 6 }}
+                        py={{ base: 4, md: 5 }}
                         shadow="md"
                         _hover={{
                           transform: 'translateY(-2px)',
                           shadow: 'lg',
                         }}
                         transition="all 0.2s"
+                        width={{ base: "full", md: "auto" }}
                       >
                         Refresh Bids
                       </Button>

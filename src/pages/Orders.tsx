@@ -141,14 +141,16 @@ const Orders = () => {
           <Box 
             bg={tabBg} 
             borderRadius="xl" 
-            p={1}
+            p={{ base: 1, sm: 1 }}
             border="1px solid"
             borderColor={borderColor}
             boxShadow="sm"
+            width="100%"
           >
             <TabList 
-              gap={2} 
-              p={2}
+              gap={{ base: 1, sm: 2 }}
+              p={{ base: 1, sm: 2 }}
+              flexDir={{ base: "column", sm: "row" }}
             >
               <CustomTab icon={FaListAlt}>All Orders</CustomTab>
               <CustomTab icon={FaSpinner}>Active</CustomTab>
@@ -224,7 +226,8 @@ const Orders = () => {
     return (
       <Tab
         flex={1}
-        py={3}
+        py={{ base: 2, sm: 3 }}
+        px={{ base: 2, sm: 3 }}
         borderRadius="lg"
         fontWeight="medium"
         transition="all 0.3s ease"
@@ -233,7 +236,7 @@ const Orders = () => {
           bg: activeBg,
           color: activeColor,
           fontWeight: "bold",
-          transform: "translateY(-2px)",
+          transform: { base: "none", sm: "translateY(-2px)" },
           border: "1px solid",
           borderColor: useColorModeValue("rgba(51, 14, 237, 0.3)", "rgba(153, 255, 0, 0.3)"),
           boxShadow: useColorModeValue(
@@ -249,10 +252,12 @@ const Orders = () => {
           outline: "none",
         }}
         position="relative"
+        justifyContent="center"
+        mb={{ base: 1, sm: 0 }}
       >
         <HStack spacing={2} justify="center">
-          <Icon as={icon} boxSize={4} />
-          <Text>{children}</Text>
+          <Icon as={icon} boxSize={{ base: 3.5, sm: 4 }} />
+          <Text fontSize={{ base: "sm", sm: "md" }}>{children}</Text>
         </HStack>
         <Box
           position="absolute"
@@ -267,6 +272,23 @@ const Orders = () => {
           _selected={{
             width: "30px",
           }}
+          display={{ base: "none", sm: "block" }}
+        />
+        {/* For mobile, show accent on the left side instead of bottom */}
+        <Box
+          position="absolute"
+          left={0}
+          top="50%"
+          width="3px"
+          height="0"
+          borderRadius="full"
+          bg={activeColor}
+          transform="translateY(-50%)"
+          transition="all 0.3s ease"
+          _selected={{
+            height: "60%",
+          }}
+          display={{ base: "block", sm: "none" }}
         />
       </Tab>
     );
