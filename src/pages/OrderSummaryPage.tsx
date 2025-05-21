@@ -206,7 +206,7 @@ const OrderSummaryPage = () => {
           // @ts-ignore
           const paystack = window.PaystackPop;
           const handler = paystack.setup({
-            key: paystack,
+            key: paystackKey,
             email: user?.email || 'customer@trippa.app',
             amount: totalAmount * 100, // Convert to kobo
             ref: reference,
