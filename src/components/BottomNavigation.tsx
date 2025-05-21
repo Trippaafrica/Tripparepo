@@ -70,7 +70,7 @@ const BottomNavigation = () => {
                 mb={active ? 1 : 0}
                 transform={active ? 'translateY(-2px)' : 'none'}
                 transition="transform 0.3s"
-              >
+            >
                 <Icon 
                   as={item.icon} 
                   boxSize={active ? "24px" : "20px"} 

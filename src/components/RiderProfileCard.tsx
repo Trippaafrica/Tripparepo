@@ -122,11 +122,11 @@ const RiderProfileCard = ({
               {riderName}
             </Text>
             <HStack wrap="wrap" spacing={{ base: 1, sm: 2 }}>
-              <HStack>
+            <HStack>
                 <Icon as={FaStar} color="yellow.400" boxSize={{ base: 3, sm: 4 }} />
                 <Text color="gray.300" fontSize={{ base: "xs", sm: "sm" }}>
-                  {rating.toFixed(1)} rating
-                </Text>
+                {rating.toFixed(1)} rating
+              </Text>
               </HStack>
               
               <Badge 

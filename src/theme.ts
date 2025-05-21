@@ -15,12 +15,12 @@ const theme = extendTheme({
     },
   },
   styles: {
-    global: {
+    global: (props: { colorMode: string }) => ({
       body: {
-        bg: 'brand.dark',
-        color: 'brand.light',
+        bg: props.colorMode === 'dark' ? 'brand.dark' : 'white',
+        color: props.colorMode === 'dark' ? 'brand.light' : 'gray.800',
       },
-    },
+    }),
   },
   components: {
     Button: {
@@ -46,20 +46,30 @@ const theme = extendTheme({
       },
     },
     Card: {
-      baseStyle: {
+      baseStyle: (props: { colorMode: string }) => ({
         container: {
-          bg: 'rgba(26, 26, 46, 0.8)',
+          bg: props.colorMode === 'dark' 
+            ? 'rgba(26, 26, 46, 0.8)' 
+            : 'white',
           backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(157, 78, 221, 0.2)',
-          boxShadow: '0 4px 20px rgba(157, 78, 221, 0.15)',
+          border: props.colorMode === 'dark'
+            ? '1px solid rgba(157, 78, 221, 0.2)'
+            : '1px solid rgba(0, 0, 0, 0.1)',
+          boxShadow: props.colorMode === 'dark'
+            ? '0 4px 20px rgba(157, 78, 221, 0.15)'
+            : '0 4px 20px rgba(0, 0, 0, 0.05)',
         },
-      },
+      }),
     },
     Input: {
-      baseStyle: {
+      baseStyle: (props: { colorMode: string }) => ({
         field: {
-          bg: 'rgba(26, 26, 46, 0.6)',
-          border: '1px solid rgba(157, 78, 221, 0.2)',
+          bg: props.colorMode === 'dark' 
+            ? 'rgba(26, 26, 46, 0.6)'
+            : 'white',
+          border: props.colorMode === 'dark'
+            ? '1px solid rgba(157, 78, 221, 0.2)'
+            : '1px solid rgba(0, 0, 0, 0.1)',
           _hover: {
             borderColor: 'brand.primary',
           },
@@ -68,7 +78,7 @@ const theme = extendTheme({
             boxShadow: '0 0 0 1px var(--chakra-colors-brand-secondary)',
           },
         },
-      },
+      }),
     },
   },
 });

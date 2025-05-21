@@ -127,7 +127,8 @@ const Home = () => {
     <Box mb={20}>
       {/* Welcome Section */}
       <Box 
-        bgGradient="linear(to-br, brand.dark, #9784F4)" 
+        // bgGradient="linear(to-br, brand.dark, #9784F4)" 
+        bg="brand.primary"
         pt={10} 
         pb={14}
         px={4}
@@ -172,11 +173,12 @@ const Home = () => {
                   boxShadow="0 0 0 3px rgba(153, 255, 0, 0.3)"
                 />
                 <VStack align="start" spacing={0}>
-                  <Text color="gray.300" fontSize="sm">Welcome back,</Text>
+                  <Text color="brand.light" fontSize="sm">Welcome back,</Text>
                   <Heading 
                     size="md" 
                     color="white"
-                    bgGradient="linear(to-r, white, brand.secondary)"
+                    // bgGradient="linear(to-r, white, brand.secondary)"
+                    bg="brand.white"
                     bgClip="text"
                   >
                     {user?.email?.split('@')[0] || 'User'}
@@ -210,7 +212,8 @@ const Home = () => {
                     colorScheme="brand" 
                     size="lg"
                     justifyContent="space-between"
-                    bgGradient="linear(to-r, brand.primary, brand.secondary)"
+                    // bgGradient="linear(to-r, brand.primary, brand.secondary)"
+                    bg="brand.secondary"
                     color="brand.dark"
                     fontWeight="bold"
                     borderRadius="xl"
@@ -225,14 +228,14 @@ const Home = () => {
                   
                   {recentLocations.length > 0 && (
                     <Box>
-                      <Text color="gray.300" fontSize="sm" mb={3} fontWeight="medium">Recent locations</Text>
+                      <Text color="gray.100" fontSize="sm" mb={3} fontWeight="medium">Recent locations</Text>
                       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={3}>
                         {recentLocations.map((location, index) => {
                           const isActive = activeLocationIndex === index;
                           return (
                             <HStack 
                               key={index}
-                              bg={isActive ? "rgba(153, 255, 0, 0.15)" : "rgba(255, 255, 255, 0.07)"}
+                              bg={isActive ? "rgba(153, 255, 0, 0.34)" : "rgba(255, 255, 255, 0.07)"}
                               p={3} 
                               borderRadius="lg"
                               spacing={3}

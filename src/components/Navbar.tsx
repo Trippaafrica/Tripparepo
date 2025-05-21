@@ -77,7 +77,7 @@ export default function Navbar() {
             <Box 
               p={1.5} 
               borderRadius="full" 
-              bgGradient="linear(to-r, brand.primary, brand.secondary)" 
+              // bgGradient="linear(to-r, brand.primary, brand.secondary)" 
               display="flex"
               alignItems="center"
               justifyContent="center"
@@ -85,8 +85,8 @@ export default function Navbar() {
               <Image 
                 src="/assets/Trippa.svg" 
                 alt="Trippa Logo" 
-                w={7} 
-                h={7} 
+                w={8} 
+                h={8} 
                 borderRadius="full"
               />
             </Box>

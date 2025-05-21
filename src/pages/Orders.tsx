@@ -155,7 +155,7 @@ const Orders = () => {
               <CustomTab icon={FaListAlt}>All Orders</CustomTab>
               <CustomTab icon={FaSpinner}>Active</CustomTab>
               <CustomTab icon={FaCheckCircle}>Completed</CustomTab>
-            </TabList>
+          </TabList>
           </Box>
 
           <TabPanels mt={6}>
