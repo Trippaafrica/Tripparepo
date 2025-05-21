@@ -213,7 +213,7 @@ const OrderSummaryPage = () => {
             callback: function(response: any) {
               // Handle success
               console.log('Payment successful. Reference:', response.reference);
-              window.location.href = 'https://newtrippaf.netlify.app/orders';
+              window.location.href = 'https://trippaafricaapp.com/orders';
             },
             onClose: function() {
               // Handle case when user closes the payment modal
