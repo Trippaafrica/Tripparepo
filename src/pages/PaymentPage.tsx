@@ -85,6 +85,8 @@ interface PaymentFormData {
   paymentMethod: 'card' | 'bank' | 'ussd' | 'qr';
 }
 
+const paystackKey = import.meta.env.VITE_PAYSTACK_KEY;
+
 const PaymentPage = () => {
   const { requestId, bidId } = useParams<{ requestId: string; bidId: string }>();
   const { user } = useAuth();
@@ -243,7 +245,7 @@ const PaymentPage = () => {
       setIsProcessing(true);
       
       // Use the Paystack live public key
-      const paystackPublicKey = "pk_live_023a80793215431bdc8c277e9591b024005202a5";
+      const paystackPublicKey = paystackKey;
       // Calculate total directly, don't rely on fields that might not exist
       const totalAmount = acceptedBid.amount + 1200; // rider fee + service fee
       
@@ -260,7 +262,7 @@ const PaymentPage = () => {
           firstname: formData.fullName.split(' ')[0],
           lastname: formData.fullName.split(' ').slice(1).join(' '),
           phone: formData.phone,
-          callbackUrl: 'https://newtrippaf.netlify.app/orders',
+          callbackUrl: 'https://trippaafricaapp.com/orders',
           metadata: {
             custom_fields: [
               {
@@ -307,7 +309,7 @@ const PaymentPage = () => {
         localStorage.setItem('paystack_bid_id', acceptedBid.id);
         
         // Redirect to payment page with callback URL
-        window.location.href = `https://checkout.paystack.com/023a80793215431bdc8c277e9591b024005202a5/payment?email=${encodeURIComponent(formData.email)}&amount=${totalAmount * 100}&ref=${reference}&callback_url=${encodeURIComponent('https://newtrippaf.netlify.app/orders')}`;
+        window.location.href = `https://checkout.paystack.com/023a80793215431bdc8c277e9591b024005202a5/payment?email=${encodeURIComponent(formData.email)}&amount=${totalAmount * 100}&ref=${reference}&callback_url=${encodeURIComponent('https://trippaafricaapp.com/orders')}`;
       }
     } catch (error: any) {
       console.error('Error initializing payment:', error);
