@@ -37,7 +37,6 @@ interface OrderDetails {
   pickup_address: string;
   dropoff_address: string;
   status: string;
-  delivery_status?: string;
   package_weight?: number;
   pickup_contact_name?: string;
   pickup_contact_phone?: string;
@@ -114,7 +113,6 @@ const OrderDetails = () => {
           pickup_address: orderData.pickup_location,
           dropoff_address: orderData.delivery_location,
           status: orderData.status,
-          delivery_status: orderData.delivery_status || orderData.status,
           package_weight: deliveryRequest?.package_weight,
           pickup_contact_name: deliveryRequest?.pickup_contact_name,
           pickup_contact_phone: deliveryRequest?.pickup_contact_phone,
@@ -185,7 +183,6 @@ const OrderDetails = () => {
           pickup_address: requestData.pickup_address,
           dropoff_address: requestData.dropoff_address,
           status: requestData.status,
-          delivery_status: requestData.delivery_status || requestData.status,
           package_weight: requestData.package_weight,
           pickup_contact_name: requestData.pickup_contact_name,
           pickup_contact_phone: requestData.pickup_contact_phone,
@@ -238,20 +235,19 @@ const OrderDetails = () => {
   };
 
   const getStatusSteps = () => {
-    const trackingStatus = order?.delivery_status || order?.status || '';
     const steps = [
       { label: 'Pending', value: 'pending', completed: true },
-      { label: 'Accepted', value: 'accepted', completed: ['accepted', 'picked_up', 'in_transit', 'delivered'].includes(trackingStatus) },
-      { label: 'Picked Up', value: 'picked_up', completed: ['picked_up', 'in_transit', 'delivered'].includes(trackingStatus) },
-      { label: 'In Transit', value: 'in_transit', completed: ['in_transit', 'delivered'].includes(trackingStatus) },
-      { label: 'Delivered', value: 'delivered', completed: trackingStatus === 'delivered' },
+      { label: 'Accepted', value: 'accepted', completed: ['accepted', 'picked_up', 'in_transit', 'delivered'].includes(order?.status || '') },
+      { label: 'Picked Up', value: 'picked_up', completed: ['picked_up', 'in_transit', 'delivered'].includes(order?.status || '') },
+      { label: 'In Transit', value: 'in_transit', completed: ['in_transit', 'delivered'].includes(order?.status || '') },
+      { label: 'Delivered', value: 'delivered', completed: order?.status === 'delivered' },
     ];
     return steps;
   };
 
   const getProgressValue = () => {
-    const trackingStatus = order?.delivery_status || order?.status || '';
-    switch (trackingStatus) {
+    const status = order?.status || '';
+    switch (status) {
       case 'pending': return 20;
       case 'accepted': return 40;
       case 'picked_up': return 60;
@@ -262,8 +258,8 @@ const OrderDetails = () => {
   };
 
   const getStatusColor = () => {
-    const trackingStatus = order?.delivery_status || order?.status || '';
-    switch (trackingStatus) {
+    const status = order?.status || '';
+    switch (status) {
       case 'pending': return 'yellow';
       case 'accepted': return 'blue';
       case 'picked_up': return 'teal';
@@ -325,7 +321,7 @@ const OrderDetails = () => {
               py={1}
               borderRadius="full"
             >
-              {(order.delivery_status || order.status).replace(/_/g, ' ').toUpperCase()}
+              {order.status.replace(/_/g, ' ').toUpperCase()}
             </Badge>
           </HStack>
           <Text color="gray.500" fontSize="sm">

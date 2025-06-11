@@ -8,6 +8,7 @@ import theme from './theme';
 // Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 import Profile from './pages/Profile';
 import Orders from './pages/Orders';
 import ComingSoon from './pages/ComingSoon';
@@ -22,8 +23,14 @@ import TrackingPage from './pages/TrackingPage';
 import Navbar from './components/Navbar';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   
+  // Show nothing while checking authentication
+  if (loading) {
+    return null;
+  }
+  
+  // Redirect to login if not authenticated
   if (!user) {
     return <Navigate to="/login" />;
   }
@@ -61,7 +68,7 @@ const BottomNavigation = () => {
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   // Don't show navigation on login/register pages
-  if (pathname === '/login' || pathname === '/register') {
+  if (pathname === '/login' || pathname === '/signup') {
     return null;
   }
 
@@ -110,7 +117,7 @@ function App() {
             minH="100vh" 
             pb="60px" // Space for bottom navigation
             position="relative"
-            maxW="500px" // Mobile app width constraint
+            maxW="1500px" // Mobile app width constraint
             mx="auto"    // Center the app
             boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
           >
@@ -119,6 +126,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
                 <Route path="/coming-soon/:serviceType" element={<ComingSoon />} />
                 
                 {/* Delivery routes */}

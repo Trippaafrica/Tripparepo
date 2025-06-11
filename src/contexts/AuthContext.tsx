@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../services/supabase';
 import { useToast } from '@chakra-ui/react';
 
 interface AuthContextType {
@@ -19,18 +19,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const toast = useToast();
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+    let mounted = true;
+  
+    const checkSession = async () => {
+      try {
+        setLoading(true);
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+        
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error getting session:', error);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    };
+
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change event:', event);
+      if (mounted) {
+        setUser(session?.user ?? null);
+        // Reset loading if not already done
+        setLoading(false);
+      }
     });
 
-    // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {
@@ -43,29 +68,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       // If email confirmation is not enabled or the user is already confirmed
-      if (data?.user) {
-        // Safely check if email is verified with optional chaining
-        const identities = data.user.identities || [];
-        const hasVerifiedEmail = identities.length > 0 && identities[0]?.identity_data?.email_verified;
-        
-        if (!hasVerifiedEmail) {
-          toast({
-            title: "Success!",
-            description: "Please check your email for verification link.",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
-        } else {
-          // User is already signed in after signup
-          toast({
-            title: "Account created!",
-            description: "You've been successfully signed up.",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-        }
+      if (data?.user && !data.user.identities?.[0].identity_data?.email_verified) {
+        toast({
+          title: "Success!",
+          description: "Please check your email for verification link.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else if (data?.user) {
+        // User is already signed in after signup
+        toast({
+          title: "Account created!",
+          description: "You've been successfully signed up.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
       }
     } catch (error: any) {
       toast({

@@ -9,8 +9,6 @@ import {
   Text,
   useColorModeValue,
   FormErrorMessage,
-  Checkbox,
-  Link,
 } from '@chakra-ui/react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +19,6 @@ export function SignUpForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
@@ -29,10 +26,6 @@ export function SignUpForm() {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError('Passwords do not match');
-      return;
-    }
-    if (!termsAccepted) {
-      setError('Please accept the terms and conditions');
       return;
     }
     try {
@@ -119,39 +112,6 @@ export function SignUpForm() {
               }}
             />
             <FormErrorMessage>{error}</FormErrorMessage>
-          </FormControl>
-
-          <FormControl isRequired isInvalid={!!error && !termsAccepted}>
-            <Checkbox
-              isChecked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              colorScheme="brand"
-              color="gray.200"
-            >
-              <Text color="gray.200" fontSize="sm">
-                I agree to the{' '}
-                <Link
-                  href="https://trippaafrica.com/terms-of-use/"
-                  isExternal
-                  color="brand.secondary"
-                  textDecoration="underline"
-                >
-                  Terms and Conditions
-                </Link>
-                {' '}and{' '}
-                <Link
-                  href="https://trippaafrica.com/privacy-policy/"
-                  isExternal
-                  color="brand.secondary"
-                  textDecoration="underline"
-                >
-                  Privacy Policy
-                </Link>
-              </Text>
-            </Checkbox>
-            {!termsAccepted && error === 'Please accept the terms and conditions' && (
-              <FormErrorMessage>{error}</FormErrorMessage>
-            )}
           </FormControl>
 
           <Button

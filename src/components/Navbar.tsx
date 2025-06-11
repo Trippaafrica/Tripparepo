@@ -7,6 +7,7 @@ import {
   useColorModeValue,
   useColorMode,
   HStack,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import { useLocation } from 'react-router-dom';
 import { FaMoon, FaSun } from 'react-icons/fa';
@@ -16,6 +17,7 @@ export default function Navbar() {
   const { colorMode, toggleColorMode } = useColorMode();
   const { user } = useAuth();
   const location = useLocation();
+  const isMobile = useBreakpointValue({ base: true, md: false });
   
   // Don't show navbar on login page
   if (location.pathname === '/login' || location.pathname === '/register') {
@@ -44,20 +46,26 @@ export default function Navbar() {
   
   return (
     <Box 
-      borderBottom={1}
-      borderStyle={'solid'}
-      borderColor={useColorModeValue('gray.200', 'gray.700')}
-      bg={useColorModeValue('white', 'gray.800')}
+      bgGradient={useColorModeValue(
+        'linear(to-r, white, gray.50)',
+        'linear(to-r, brand.dark, #242451)'
+      )}
+      borderBottom="1px"
+      borderColor={useColorModeValue('gray.200', 'rgba(151, 132, 244, 0.2)')}
+      backdropFilter="blur(10px)"
       position="sticky"
       top={0}
       zIndex={1000}
+      boxShadow="0 2px 10px rgba(0, 0, 0, 0.05)"
     >
       <Flex
-        minH={'60px'}
-        py={{ base: 2 }}
-        px={{ base: 4 }}
+        minH={'70px'}
+        py={{ base: 3 }}
+        px={{ base: 5 }}
         align={'center'}
         justify={'space-between'}
+        maxW="container.lg"
+        mx="auto"
       >
         <Flex
           flex={{ base: 1 }}
@@ -65,13 +73,33 @@ export default function Navbar() {
           align="center"
           position="relative"
         >
-          <HStack spacing={2} justify="center" w="100%">
-            <Image src="/assets/Trippa.svg" alt="Trippa Logo" w={8} h={8} />
+          <HStack spacing={3} justify="center" w="100%">
+            <Box 
+              p={1.5} 
+              borderRadius="full" 
+              // bgGradient="linear(to-r, brand.primary, brand.secondary)" 
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Image 
+                src="/assets/Trippa.svg" 
+                alt="Trippa Logo" 
+                w={8} 
+                h={8} 
+                borderRadius="full"
+              />
+            </Box>
             <Text
               textAlign="center"
               fontWeight="bold"
               fontSize="xl"
-              color={useColorModeValue('brand.primary', 'brand.secondary')}
+              letterSpacing="tight"
+              bgGradient={useColorModeValue(
+                'linear(to-r, brand.primary, #6654c0)',
+                'linear(to-r, brand.primary, brand.secondary)'
+              )}
+              bgClip="text"
             >
               {getPageTitle()}
             </Text>
@@ -81,11 +109,16 @@ export default function Navbar() {
           <IconButton
             position="absolute"
             right={0}
-            size={'sm'}
+            size={'md'}
             icon={colorMode === 'light' ? <FaMoon /> : <FaSun />}
             aria-label={'Toggle Color Mode'}
             onClick={toggleColorMode}
             variant="ghost"
+            color={useColorModeValue('brand.primary', 'brand.secondary')}
+            _hover={{
+              bg: useColorModeValue('gray.100', 'rgba(151, 132, 244, 0.1)')
+            }}
+            borderRadius="full"
           />
         </Flex>
       </Flex>
